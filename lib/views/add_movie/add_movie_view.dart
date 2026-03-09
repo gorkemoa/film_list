@@ -5,6 +5,8 @@ import '../../core/responsive/size_config.dart';
 import '../../core/responsive/size_tokens.dart';
 import '../../viewmodels/add_movie_view_model.dart';
 import '../../app/app_theme.dart';
+import '../../viewmodels/home_view_model.dart';
+import '../movie_detail/movie_detail_view.dart';
 import 'custom_add_movie_view.dart';
 
 class AddMovieView extends StatefulWidget {
@@ -160,18 +162,17 @@ class _AddMovieViewState extends State<AddMovieView> {
                         color: Colors.transparent,
                         child: InkWell(
                           borderRadius: SizeTokens.circularRadiusMedium,
-                          onTap: () async {
-                            final success = await viewModel.selectAndSaveMovie(
-                              movie,
-                            );
-                            if (success && context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('${movie.title} saved!'),
-                                ),
-                              );
-                              Navigator.pop(context);
-                            }
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => MovieDetailView(movie: movie),
+                              ),
+                            ).then((_) {
+                              if (context.mounted) {
+                                context.read<HomeViewModel>().init();
+                              }
+                            });
                           },
                           child: Container(
                             decoration: BoxDecoration(
@@ -196,6 +197,8 @@ class _AddMovieViewState extends State<AddMovieView> {
                                         width: SizeConfig.relativeSize(50),
                                         height: SizeConfig.relativeSize(75),
                                         fit: BoxFit.cover,
+                                        cacheWidth: 300,
+                                        cacheHeight: 444,
                                         errorBuilder:
                                             (
                                               context,

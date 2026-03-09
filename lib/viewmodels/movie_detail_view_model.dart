@@ -4,17 +4,25 @@ import '../models/movie.dart';
 import '../models/review.dart';
 import '../services/movie_cache_service.dart';
 import '../services/review_service.dart';
+import '../services/translation_service.dart';
+import '../services/omdb_detail_service.dart';
 import '../core/utils/logger.dart';
 
 class MovieDetailViewModel extends ChangeNotifier {
   final MovieCacheService _movieCacheService;
   final ReviewService _reviewService;
+  final TranslationService _translationService;
+  final OmdbDetailService _omdbDetailService;
 
   MovieDetailViewModel({
     MovieCacheService? movieCacheService,
     ReviewService? reviewService,
+    TranslationService? translationService,
+    OmdbDetailService? omdbDetailService,
   }) : _movieCacheService = movieCacheService ?? MovieCacheService(),
-       _reviewService = reviewService ?? ReviewService();
+       _reviewService = reviewService ?? ReviewService(),
+       _translationService = translationService ?? TranslationService(),
+       _omdbDetailService = omdbDetailService ?? OmdbDetailService();
 
   bool isLoading = false;
   String? errorMessage;
@@ -26,10 +34,13 @@ class MovieDetailViewModel extends ChangeNotifier {
 
   Future<void> init() async {}
 
+  String? translatedPlot;
+
   Future<void> initMovie(Movie movie) async {
     isLoading = true;
     errorMessage = null;
     currentMovie = movie;
+    translatedPlot = movie.plot;
     notifyListeners();
 
     try {
@@ -40,6 +51,38 @@ class MovieDetailViewModel extends ChangeNotifier {
       if (isLocal) {
         currentMovie = localMovie;
       }
+
+      // If details are missing, try to fetch from OMDb
+      if (currentMovie!.director == null && currentMovie!.imdbId != null) {
+        final detailedMovie = await _omdbDetailService.getMovieDetail(
+          currentMovie!.imdbId!,
+        );
+        if (detailedMovie != null) {
+          currentMovie = currentMovie!.copyWith(
+            plot: detailedMovie.plot,
+            director: detailedMovie.director,
+            writer: detailedMovie.writer,
+            actors: detailedMovie.actors,
+            language: detailedMovie.language,
+            country: detailedMovie.country,
+            boxOffice: detailedMovie.boxOffice,
+            rated: detailedMovie.rated,
+            released: detailedMovie.released,
+          );
+          // If already local, update the cache
+          if (isLocal) {
+            await _movieCacheService.updateMovie(currentMovie!);
+          }
+        }
+      }
+
+      // Translate the plot if it exists
+      if (currentMovie!.plot != null) {
+        translatedPlot = await _translationService.translatePlot(
+          currentMovie!.plot!,
+        );
+      }
+
       currentReview = await _reviewService.getReviewByMovieId(currentMovie!.id);
     } catch (e) {
       errorMessage = e.toString();

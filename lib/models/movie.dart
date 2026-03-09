@@ -19,6 +19,15 @@ class Movie {
   final DateTime updatedAt;
   final String? type; // Keeping type to not crash existing UI
   final int watchCount;
+  final String? plot;
+  final String? director;
+  final String? writer;
+  final String? actors;
+  final String? language;
+  final String? country;
+  final String? boxOffice;
+  final String? rated;
+  final String? released;
 
   Movie({
     required this.id,
@@ -39,6 +48,15 @@ class Movie {
     required this.updatedAt,
     this.type,
     this.watchCount = 0,
+    this.plot,
+    this.director,
+    this.writer,
+    this.actors,
+    this.language,
+    this.country,
+    this.boxOffice,
+    this.rated,
+    this.released,
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
@@ -71,6 +89,15 @@ class Movie {
       watchCount:
           json['watch_count'] as int? ??
           (json['is_watched'] == 1 || json['is_watched'] == true ? 1 : 0),
+      plot: json['plot'] as String?,
+      director: json['director'] as String?,
+      writer: json['writer'] as String?,
+      actors: json['actors'] as String?,
+      language: json['language'] as String?,
+      country: json['country'] as String?,
+      boxOffice: json['box_office'] as String?,
+      rated: json['rated'] as String?,
+      released: json['released'] as String?,
     );
   }
 
@@ -94,6 +121,15 @@ class Movie {
       'updated_at': updatedAt.toIso8601String(),
       'type': type,
       'watch_count': watchCount,
+      'plot': plot,
+      'director': director,
+      'writer': writer,
+      'actors': actors,
+      'language': language,
+      'country': country,
+      'box_office': boxOffice,
+      'rated': rated,
+      'released': released,
     };
   }
 
@@ -116,6 +152,15 @@ class Movie {
     DateTime? updatedAt,
     String? type,
     int? watchCount,
+    String? plot,
+    String? director,
+    String? writer,
+    String? actors,
+    String? language,
+    String? country,
+    String? boxOffice,
+    String? rated,
+    String? released,
   }) {
     return Movie(
       id: id ?? this.id,
@@ -136,6 +181,15 @@ class Movie {
       updatedAt: updatedAt ?? this.updatedAt,
       type: type ?? this.type,
       watchCount: watchCount ?? this.watchCount,
+      plot: plot ?? this.plot,
+      director: director ?? this.director,
+      writer: writer ?? this.writer,
+      actors: actors ?? this.actors,
+      language: language ?? this.language,
+      country: country ?? this.country,
+      boxOffice: boxOffice ?? this.boxOffice,
+      rated: rated ?? this.rated,
+      released: released ?? this.released,
     );
   }
 }

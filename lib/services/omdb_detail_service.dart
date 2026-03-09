@@ -12,7 +12,7 @@ class OmdbDetailService {
 
   Future<Movie?> getMovieDetail(String imdbId) async {
     try {
-      final uri = Uri.parse('$_baseUrl?i=$imdbId&apikey=$_apiKey');
+      final uri = Uri.parse('$_baseUrl?i=$imdbId&plot=full&apikey=$_apiKey');
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
@@ -39,6 +39,15 @@ class OmdbDetailService {
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
             type: data['Type'],
+            plot: data['Plot'],
+            director: data['Director'],
+            writer: data['Writer'],
+            actors: data['Actors'],
+            language: data['Language'],
+            country: data['Country'],
+            boxOffice: data['BoxOffice'],
+            rated: data['Rated'],
+            released: data['Released'],
           );
         } else if (data['Error'] != null) {
           Logger.info('OMDb detail API returned error: ${data['Error']}');

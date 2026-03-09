@@ -102,14 +102,18 @@ class _SliderWidgetState extends State<SliderWidget> {
             child: movie.posterLocalPath != null
                 ? Image.file(
                     File(movie.posterLocalPath!),
-                    fit: BoxFit.cover,
+                    fit: BoxFit.fill,
+                    cacheWidth: 300,
+                    cacheHeight: 444,
                     errorBuilder: (context, error, stackTrace) =>
                         Container(color: AppTheme.surfaceLightColor),
                   )
                 : (movie.posterUrl != null && movie.posterUrl != 'N/A')
                 ? Image.network(
                     movie.posterUrl!,
-                    fit: BoxFit.cover,
+                    fit: BoxFit.contain,
+                    cacheWidth: 300,
+                    cacheHeight: 444,
                     errorBuilder: (context, error, stackTrace) =>
                         CustomPosterWidget(movie: movie),
                   )

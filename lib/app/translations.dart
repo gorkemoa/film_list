@@ -121,6 +121,16 @@ class Translations {
     'thriller:Gerilim:Thriller:Suspense',
     'war:Savaş:War:Guerra',
     'western:Batı:Western:Western',
+    'plotDescription:Film Özeti:Movie Plot:Sinopsis',
+    'movieInfoTab:Film/Dizi Bilgisi:Movie/TV Info:Información',
+    'directorLabel:Yönetmen:Director:Director',
+    'writerLabel:Yazar:Writer:Escritor',
+    'actorsLabel:Oyuncular:Actors:Actores',
+    'languageLabel:Dil:Language:Idioma',
+    'countryLabel:Ülke:Country:País',
+    'boxOfficeLabel:Gişe:Box Office:Recaudación',
+    'ratedLabel:Sınıflandırma:Rated:Clasificación',
+    'releasedLabel:Vizyon:Released:Estrenado',
   ];
 
   static String tr(String key) {

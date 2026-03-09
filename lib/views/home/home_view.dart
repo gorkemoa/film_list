@@ -12,6 +12,7 @@ import '../profile/profile_view.dart';
 import '../widgets/custom_poster_widget.dart';
 import '../../app/app_theme.dart';
 import 'widgets/slider_widget.dart';
+import 'widgets/add_poster_widget.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -35,9 +36,11 @@ class _HomeViewState extends State<HomeView> {
     BuildContext context,
     String title,
     List<Movie> list,
-    HomeViewModel viewModel,
-  ) {
-    if (list.isEmpty) return const SizedBox();
+    HomeViewModel viewModel, {
+    bool showPlaceholderIfEmpty = false,
+  }) {
+    if (list.isEmpty && !showPlaceholderIfEmpty) return const SizedBox();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -56,60 +59,76 @@ class _HomeViewState extends State<HomeView> {
         ),
         SizedBox(
           height: SizeConfig.relativeSize(200),
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: SizeTokens.paddingMedium),
-            itemCount: list.length,
-            itemBuilder: (context, index) {
-              final movie = list[index];
-              return Padding(
-                padding: EdgeInsets.only(right: SizeTokens.paddingMedium),
-                child: InkWell(
-                  borderRadius: SizeTokens.circularRadiusSmall,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MovieDetailView(movie: movie),
-                      ),
-                    ).then((_) {
-                      if (!context.mounted) return;
-                      viewModel.init();
-                    });
-                  },
-                  child: ClipRRect(
-                    borderRadius: SizeTokens.circularRadiusSmall,
-                    child: movie.posterLocalPath != null
-                        ? Image.file(
-                            File(movie.posterLocalPath!),
-                            width: SizeConfig.relativeSize(130),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                CustomPosterWidget(
-                                  movie: movie,
-                                  width: SizeConfig.relativeSize(130),
-                                ),
-                          )
-                        : (movie.posterUrl != null && movie.posterUrl != 'N/A')
-                        ? Image.network(
-                            movie.posterUrl!,
-                            width: SizeConfig.relativeSize(130),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                CustomPosterWidget(
-                                  movie: movie,
-                                  width: SizeConfig.relativeSize(130),
-                                ),
-                          )
-                        : CustomPosterWidget(
-                            movie: movie,
-                            width: SizeConfig.relativeSize(130),
-                          ),
+          child: list.isEmpty
+              ? Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: SizeTokens.paddingMedium,
                   ),
+                  child: AddPosterWidget(
+                    onTap: () => setState(() => _currentIndex = 2),
+                  ),
+                )
+              : ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: SizeTokens.paddingMedium,
+                  ),
+                  itemCount: list.length,
+                  itemBuilder: (context, index) {
+                    final movie = list[index];
+                    return Padding(
+                      padding: EdgeInsets.only(right: SizeTokens.paddingMedium),
+                      child: InkWell(
+                        borderRadius: SizeTokens.circularRadiusSmall,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MovieDetailView(movie: movie),
+                            ),
+                          ).then((_) {
+                            if (!context.mounted) return;
+                            viewModel.init();
+                          });
+                        },
+                        child: ClipRRect(
+                          borderRadius: SizeTokens.circularRadiusSmall,
+                          child: movie.posterLocalPath != null
+                              ? Image.file(
+                                  File(movie.posterLocalPath!),
+                                  width: SizeConfig.relativeSize(130),
+                                  fit: BoxFit.cover,
+                                  cacheWidth: 300,
+                                  cacheHeight: 444,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      CustomPosterWidget(
+                                        movie: movie,
+                                        width: SizeConfig.relativeSize(130),
+                                      ),
+                                )
+                              : (movie.posterUrl != null &&
+                                    movie.posterUrl != 'N/A')
+                              ? Image.network(
+                                  movie.posterUrl!,
+                                  width: SizeConfig.relativeSize(130),
+                                  fit: BoxFit.cover,
+                                  cacheWidth: 300,
+                                  cacheHeight: 444,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      CustomPosterWidget(
+                                        movie: movie,
+                                        width: SizeConfig.relativeSize(130),
+                                      ),
+                                )
+                              : CustomPosterWidget(
+                                  movie: movie,
+                                  width: SizeConfig.relativeSize(130),
+                                ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
         SizedBox(height: SizeTokens.paddingLarge),
       ],
@@ -119,7 +138,11 @@ class _HomeViewState extends State<HomeView> {
   // Removed _fallbackPoster as we use CustomPosterWidget now
 
   Widget _buildHomeTab(BuildContext context, HomeViewModel viewModel) {
-    if (viewModel.movies.isEmpty) {
+    final hasSlider = viewModel.sliderMovies.isNotEmpty;
+    final hasMovies = viewModel.movies.isNotEmpty;
+    final hasRecommended = viewModel.recommendedMovies.isNotEmpty;
+
+    if (!hasSlider && !hasMovies && !hasRecommended) {
       return Center(
         child: Text(
           Translations.tr('emptyMovies'),
@@ -144,13 +167,21 @@ class _HomeViewState extends State<HomeView> {
               viewModel.recommendedMovies,
               viewModel,
             ),
-          if (viewModel.latestMovies.isNotEmpty)
-            _buildHorizontalList(
-              context,
-              Translations.tr('myList'),
-              viewModel.latestMovies,
-              viewModel,
-            ),
+          // Always show To Watch and Watched lists on home
+          _buildHorizontalList(
+            context,
+            Translations.tr('toWatchTab'),
+            viewModel.toWatchMovies,
+            viewModel,
+            showPlaceholderIfEmpty: true,
+          ),
+          _buildHorizontalList(
+            context,
+            Translations.tr('watchedTab'),
+            viewModel.watchedMovies,
+            viewModel,
+            showPlaceholderIfEmpty: true,
+          ),
           SizedBox(height: SizeConfig.relativeSize(80)), // Bottom padding
         ],
       ),
@@ -201,6 +232,8 @@ class _HomeViewState extends State<HomeView> {
                 ? Image.file(
                     File(movie.posterLocalPath!),
                     fit: BoxFit.cover,
+                    cacheWidth: 300,
+                    cacheHeight: 444,
                     errorBuilder: (context, error, stackTrace) =>
                         CustomPosterWidget(
                           movie: movie,
@@ -211,6 +244,8 @@ class _HomeViewState extends State<HomeView> {
                 ? Image.network(
                     movie.posterUrl!,
                     fit: BoxFit.cover,
+                    cacheWidth: 300,
+                    cacheHeight: 444,
                     errorBuilder: (context, error, stackTrace) =>
                         CustomPosterWidget(
                           movie: movie,

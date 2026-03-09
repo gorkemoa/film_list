@@ -53,6 +53,8 @@ class _MovieDetailViewState extends State<MovieDetailView> {
           Image.file(
             File(movie.posterLocalPath!),
             fit: BoxFit.cover,
+            cacheWidth: 300,
+            cacheHeight: 444,
             errorBuilder: (context, error, stackTrace) =>
                 CustomPosterWidget(movie: movie),
           )
@@ -60,6 +62,8 @@ class _MovieDetailViewState extends State<MovieDetailView> {
           Image.network(
             movie.posterUrl!,
             fit: BoxFit.cover,
+            cacheWidth: 300,
+            cacheHeight: 444,
             errorBuilder: (context, error, stackTrace) =>
                 CustomPosterWidget(movie: movie),
           )
@@ -116,6 +120,35 @@ class _MovieDetailViewState extends State<MovieDetailView> {
                 onPressed: () => onChanged(index + 1),
               );
             }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String? value) {
+    if (value == null || value == 'N/A' || value.isEmpty)
+      return const SizedBox();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              Translations.tr(label),
+              style: TextStyle(
+                color: AppTheme.textSecondaryColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(color: Colors.white, height: 1.3),
+            ),
           ),
         ],
       ),
@@ -207,6 +240,83 @@ class _MovieDetailViewState extends State<MovieDetailView> {
                             ],
                           ),
                         ),
+                      SizedBox(height: SizeTokens.paddingLarge),
+
+                      // Plot Section
+                      if (viewModel.isLoading &&
+                          viewModel.translatedPlot == null)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      else if (viewModel.translatedPlot != null &&
+                          viewModel.translatedPlot!.isNotEmpty &&
+                          viewModel.translatedPlot != 'N/A')
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              Translations.tr('plotDescription'),
+                              style: TextStyle(
+                                fontSize: SizeTokens.textTitle,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: SizeTokens.paddingSmall),
+                            Text(
+                              viewModel.translatedPlot!,
+                              style: TextStyle(
+                                fontSize: SizeTokens.textMedium,
+                                color: AppTheme.textSecondaryColor,
+                                height: 1.5,
+                              ),
+                            ),
+                            SizedBox(height: SizeTokens.paddingLarge),
+                          ],
+                        ),
+
+                      // Movie Info Section
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            Translations.tr('movieInfoTab'),
+                            style: TextStyle(
+                              fontSize: SizeTokens.textTitle,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: SizeTokens.paddingMedium),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.surfaceColor,
+                              borderRadius: SizeTokens.circularRadiusMedium,
+                              border: Border.all(
+                                color: AppTheme.surfaceLightColor,
+                              ),
+                            ),
+                            padding: EdgeInsets.all(SizeTokens.paddingMedium),
+                            child: Column(
+                              children: [
+                                _buildInfoRow('directorLabel', movie.director),
+                                _buildInfoRow('writerLabel', movie.writer),
+                                _buildInfoRow('actorsLabel', movie.actors),
+                                _buildInfoRow('languageLabel', movie.language),
+                                _buildInfoRow('countryLabel', movie.country),
+                                _buildInfoRow(
+                                  'boxOfficeLabel',
+                                  movie.boxOffice,
+                                ),
+                                _buildInfoRow('ratedLabel', movie.rated),
+                                _buildInfoRow('releasedLabel', movie.released),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: SizeTokens.paddingLarge),
+                        ],
+                      ),
 
                       SizedBox(height: SizeTokens.paddingLarge),
                       Container(

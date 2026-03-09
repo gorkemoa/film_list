@@ -13,6 +13,7 @@ import 'viewmodels/home_view_model.dart';
 import 'viewmodels/add_movie_view_model.dart';
 import 'viewmodels/movie_detail_view_model.dart';
 import 'viewmodels/profile_view_model.dart';
+import 'services/translation_service.dart';
 import 'views/home/home_view.dart';
 import 'core/utils/logger.dart';
 
@@ -27,6 +28,7 @@ void main() async {
   final omdbDetailService = OmdbDetailService();
   final posterDownloadService = PosterDownloadService();
   final reviewService = ReviewService();
+  final translationService = TranslationService();
 
   Logger.info('App starting...');
 
@@ -48,6 +50,8 @@ void main() async {
           create: (_) => MovieDetailViewModel(
             movieCacheService: movieCacheService,
             reviewService: reviewService,
+            translationService: translationService,
+            omdbDetailService: omdbDetailService,
           ),
         ),
         ChangeNotifierProvider(

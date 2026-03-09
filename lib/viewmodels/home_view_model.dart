@@ -37,6 +37,12 @@ class HomeViewModel extends ChangeNotifier {
       final rating = double.tryParse(m.imdbRating ?? '0') ?? 0.0;
       return rating >= 8.0;
     }).toList();
+
+    if (recs.isEmpty && _suggestions.isNotEmpty) {
+      // Use suggestions that aren't already in the slider (slider takes up to 5)
+      return _suggestions.skip(movies.isEmpty ? 5 : 3).take(10).toList();
+    }
+
     recs.sort((a, b) {
       final rA = double.tryParse(a.imdbRating ?? '0') ?? 0.0;
       final rB = double.tryParse(b.imdbRating ?? '0') ?? 0.0;
@@ -60,7 +66,6 @@ class HomeViewModel extends ChangeNotifier {
 
     // Priority 3: Suggestions from DiscoveryService
     // Note: We'll fetch these asynchronously in init() and store them
-    // For now, let's keep the logic synchronous by using a stored list
     List<Movie> combined = [];
 
     // Interleave local high-rated with suggestions
@@ -68,22 +73,18 @@ class HomeViewModel extends ChangeNotifier {
       combined.add(topTier.first);
     }
 
+    // Always add some suggestions if we have them
     if (_suggestions.isNotEmpty) {
-      combined.addAll(_suggestions.take(3));
+      combined.addAll(_suggestions.take(movies.isEmpty ? 5 : 3));
     }
 
-    if (midTier.isNotEmpty) {
-      combined.addAll(midTier.take(2));
+    if (midTier.isNotEmpty && combined.length < 5) {
+      combined.addAll(midTier.take(5 - combined.length));
     }
 
-    // fallback if still too short
-    if (combined.isEmpty) {
+    // fallback if still too short and we have movies
+    if (combined.isEmpty && movies.isNotEmpty) {
       combined = movies.reversed.take(5).toList();
-    }
-
-    // If still empty (no movies at all), return suggestions only
-    if (combined.isEmpty) {
-      return _suggestions.take(5).toList();
     }
 
     return combined;
