@@ -1,4 +1,4 @@
-package com.rivorya.filmdiziliste
+package com.rivorya.filmvedizilistele
 
 import io.flutter.embedding.android.FlutterActivity
 
