@@ -37,11 +37,20 @@ class Translations {
     Logger.info('Language changed to: ${lang.name}');
   }
 
+  static Future<Language> getPreferredLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final langCode = prefs.getString(AppConstants.prefsLanguageKey);
+    if (langCode == 'tr') return Language.tr;
+    if (langCode == 'es') return Language.es;
+    return Language.en;
+  }
+
   // Format => key:TR:EN:ES
   static const List<String> _dictionary = [
-    'appName:Çevrimdışı Film Listesi:Offline Film List:Lista de Películas Offline',
-    'movies:Filmler:Movies:Películas',
     'settings:Ayarlar:Settings:Ajustes',
+    'language:Dil:Language:Idioma',
+    'clearData:Verileri Temizle:Clear Data:Borrar Datos',
+    'clearDataConfirm:Tüm veriler silinecek. Emin misiniz?:All data will be deleted. Are you sure?:¿Se eliminarán todos los datos. ¿Estás seguro?',
     'addMovie:İçerik Ekle:Add Content:Añadir Contenido',
     'title:Başlık:Title:Título',
     'type:Tür:Type:Tipo',
@@ -89,6 +98,29 @@ class Translations {
     'toWatchTab:İzleyeceklerim:To Watch:Para Ver',
     'profileTab:Profilim:Profile:Perfil',
     'profileDesc:Profil detayları (Yakında):Profile details (Soon):Detalles del perfil (Pronto)',
+    'details:Detaylar:Details:Detalles',
+    'suggested:Öneri:Suggested:Sugerido',
+    'addToList:Listeme Ekle:Add to List:Añadir a lista',
+    'action:Aksiyon:Action:Acción',
+    'adventure:Macera:Adventure:Aventura',
+    'animation:Animasyon:Animation:Animación',
+    'biography:Biyografi:Biography:Biografía',
+    'comedy:Komedi:Comedy:Comedia',
+    'crime:Suç:Crime:Crimen',
+    'documentary:Belgesel:Documentary:Documental',
+    'drama:Dram:Drama:Drama',
+    'family:Aile:Family:Familia',
+    'fantasy:Fantastik:Fantasy:Fantasía',
+    'history:Tarih:History:Historia',
+    'horror:Korku:Horror:Terror',
+    'music:Müzik:Music:Música',
+    'mystery:Gizem:Mystery:Misterio',
+    'romance:Romantik:Romance:Romance',
+    'sciFi:Bilim Kurgu:Sci-Fi:Ciencia Ficción',
+    'sport:Spor:Sport:Deportes',
+    'thriller:Gerilim:Thriller:Suspense',
+    'war:Savaş:War:Guerra',
+    'western:Batı:Western:Western',
   ];
 
   static String tr(String key) {

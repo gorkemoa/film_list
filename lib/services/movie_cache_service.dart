@@ -75,4 +75,15 @@ class MovieCacheService {
       throw Exception('Failed to delete movie');
     }
   }
+
+  Future<void> clearAllMovies() async {
+    try {
+      final box = LocalDb.movieBox;
+      await box.clear();
+      Logger.info('All movies cleared from cache');
+    } catch (e, st) {
+      Logger.error('Failed to clear all movies from cache', e, st);
+      throw Exception('Failed to clear all movies');
+    }
+  }
 }

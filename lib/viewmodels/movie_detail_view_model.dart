@@ -22,6 +22,7 @@ class MovieDetailViewModel extends ChangeNotifier {
 
   Movie? currentMovie;
   Review? currentReview;
+  bool isLocal = false;
 
   Future<void> init() async {}
 
@@ -32,7 +33,14 @@ class MovieDetailViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      currentReview = await _reviewService.getReviewByMovieId(movie.id);
+      final localMovie = await _movieCacheService.getMovieByImdbId(
+        movie.imdbId ?? '',
+      );
+      isLocal = localMovie != null;
+      if (isLocal) {
+        currentMovie = localMovie;
+      }
+      currentReview = await _reviewService.getReviewByMovieId(currentMovie!.id);
     } catch (e) {
       errorMessage = e.toString();
       Logger.error('MovieDetailViewModel init error', e);
@@ -124,4 +132,30 @@ class MovieDetailViewModel extends ChangeNotifier {
 
   Future<void> addMovie() async {}
   Future<void> deleteMovie(String id) async {}
+
+  Future<void> addMovieToLocalList() async {
+    if (currentMovie == null || isLocal) return;
+
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      // Create a fresh ID for local storage
+      final localMovie = currentMovie!.copyWith(
+        id: const Uuid().v4(),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      await _movieCacheService.saveMovie(localMovie);
+      currentMovie = localMovie;
+      isLocal = true;
+      Logger.info('Suggested movie added to local list: ${localMovie.title}');
+    } catch (e) {
+      errorMessage = e.toString();
+      Logger.error('Failed to add suggested movie to local list', e);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
 }

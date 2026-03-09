@@ -9,10 +9,10 @@ class OmdbSearchService {
   // In production, this should be in an environment variable
   static const String _apiKey = 'trilogy';
 
-  Future<List<Movie>> searchMovies(String query) async {
+  Future<List<Movie>> searchMovies(String query, {int page = 1}) async {
     try {
       final uri = Uri.parse(
-        '$_baseUrl?s=${Uri.encodeComponent(query)}&apikey=$_apiKey',
+        '$_baseUrl?s=${Uri.encodeComponent(query)}&page=$page&apikey=$_apiKey',
       );
       final response = await http.get(uri);
 

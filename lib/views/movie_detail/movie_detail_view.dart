@@ -92,11 +92,13 @@ class _MovieDetailViewState extends State<MovieDetailView> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: SizeTokens.textMedium,
-              color: AppTheme.textSecondaryColor,
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: SizeTokens.textMedium,
+                color: AppTheme.textSecondaryColor,
+              ),
             ),
           ),
           Row(
@@ -213,240 +215,270 @@ class _MovieDetailViewState extends State<MovieDetailView> {
                           borderRadius: SizeTokens.circularRadiusMedium,
                           border: Border.all(color: AppTheme.surfaceLightColor),
                         ),
-                        child: Column(
-                          children: [
-                            SwitchListTile(
-                              title: Text(
-                                Translations.tr('isWatched'),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              value: movie.isWatched,
-                              activeThumbColor: AppTheme.primaryColor,
-                              onChanged: (val) {
-                                viewModel.toggleWatched(movie);
-                              },
-                              shape: RoundedRectangleBorder(
-                                borderRadius: SizeTokens.circularRadiusMedium,
-                              ),
-                            ),
-                            if (movie.isWatched) ...[
-                              const Divider(height: 1),
-                              Padding(
+                        child: !viewModel.isLocal
+                            ? Padding(
                                 padding: EdgeInsets.all(
                                   SizeTokens.paddingMedium,
                                 ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '${Translations.tr('watchCount')}: ${movie.watchCount}',
-                                      style: TextStyle(
-                                        fontSize: SizeTokens.textMedium,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.add),
+                                  label: Text(Translations.tr('addToList')),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primaryColor,
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: SizeTokens.paddingMedium,
+                                    ),
+                                  ),
+                                  onPressed: () =>
+                                      viewModel.addMovieToLocalList(),
+                                ),
+                              )
+                            : Column(
+                                children: [
+                                  SwitchListTile(
+                                    title: Text(
+                                      Translations.tr('isWatched'),
+                                      style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: AppTheme.textSecondaryColor,
                                       ),
                                     ),
-                                    ElevatedButton.icon(
-                                      onPressed: () {
-                                        viewModel.incrementWatchCount();
-                                      },
-                                      icon: Icon(
-                                        Icons.add,
-                                        size: SizeTokens.iconSmall,
+                                    value: movie.isWatched,
+                                    activeThumbColor: AppTheme.primaryColor,
+                                    onChanged: (val) {
+                                      viewModel.toggleWatched(movie);
+                                    },
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          SizeTokens.circularRadiusMedium,
+                                    ),
+                                  ),
+                                  if (movie.isWatched) ...[
+                                    const Divider(height: 1),
+                                    Padding(
+                                      padding: EdgeInsets.all(
+                                        SizeTokens.paddingMedium,
                                       ),
-                                      label: Text(
-                                        Translations.tr('watchOneMoreTime'),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: SizeTokens.paddingMedium,
-                                          vertical: SizeTokens.paddingSmall,
-                                        ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '${Translations.tr('watchCount')}: ${movie.watchCount}',
+                                            style: TextStyle(
+                                              fontSize: SizeTokens.textMedium,
+                                              fontWeight: FontWeight.bold,
+                                              color:
+                                                  AppTheme.textSecondaryColor,
+                                            ),
+                                          ),
+                                          ElevatedButton.icon(
+                                            onPressed: () {
+                                              viewModel.incrementWatchCount();
+                                            },
+                                            icon: Icon(
+                                              Icons.add,
+                                              size: SizeTokens.iconSmall,
+                                            ),
+                                            label: Text(
+                                              Translations.tr(
+                                                'watchOneMoreTime',
+                                              ),
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal:
+                                                    SizeTokens.paddingMedium,
+                                                vertical:
+                                                    SizeTokens.paddingSmall,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
-                                ),
+                                ],
                               ),
-                            ],
-                          ],
-                        ),
                       ),
 
-                      SizedBox(height: SizeTokens.paddingXLarge),
+                      if (viewModel.isLocal) ...[
+                        SizedBox(height: SizeTokens.paddingXLarge),
 
-                      if (movie.isWatched) ...[
-                        Text(
-                          Translations.tr('rateMovie'),
-                          style: TextStyle(
-                            fontSize: SizeTokens.textTitle,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: SizeTokens.paddingMedium),
-
-                        if (review != null) ...[
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppTheme.surfaceColor,
-                              borderRadius: SizeTokens.circularRadiusMedium,
-                              border: Border.all(
-                                color: AppTheme.surfaceLightColor,
-                              ),
-                            ),
-                            padding: EdgeInsets.all(SizeTokens.paddingLarge),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.star,
-                                      color: Colors.amber,
-                                      size: SizeTokens.iconLarge,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      review.overallRating.toStringAsFixed(1),
-                                      style: TextStyle(
-                                        fontSize: SizeTokens.textTitle,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: SizeTokens.paddingMedium),
-                                Text(
-                                  '${Translations.tr('storyRating')}: ${review.storyRating}/5',
-                                  style: TextStyle(
-                                    color: AppTheme.textSecondaryColor,
-                                  ),
-                                ),
-                                Text(
-                                  '${Translations.tr('musicRating')}: ${review.musicRating}/5',
-                                  style: TextStyle(
-                                    color: AppTheme.textSecondaryColor,
-                                  ),
-                                ),
-                                Text(
-                                  '${Translations.tr('actingRating')}: ${review.actingRating}/5',
-                                  style: TextStyle(
-                                    color: AppTheme.textSecondaryColor,
-                                  ),
-                                ),
-                                Text(
-                                  '${Translations.tr('cinematographyRating')}: ${review.cinematographyRating}/5',
-                                  style: TextStyle(
-                                    color: AppTheme.textSecondaryColor,
-                                  ),
-                                ),
-                                SizedBox(height: SizeTokens.paddingSmall),
-                                Text(
-                                  '${Translations.tr('recommend')}: ${Translations.tr(review.recommend ? 'yes' : 'no')}',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ] else ...[
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppTheme.surfaceColor,
-                              borderRadius: SizeTokens.circularRadiusMedium,
-                              border: Border.all(
-                                color: AppTheme.surfaceLightColor,
-                              ),
-                            ),
-                            padding: EdgeInsets.all(SizeTokens.paddingMedium),
-                            child: Column(
-                              children: [
-                                _buildStarRater(
-                                  Translations.tr('storyRating'),
-                                  story,
-                                  (val) => setState(() => story = val),
-                                ),
-                                _buildStarRater(
-                                  Translations.tr('musicRating'),
-                                  music,
-                                  (val) => setState(() => music = val),
-                                ),
-                                _buildStarRater(
-                                  Translations.tr('actingRating'),
-                                  acting,
-                                  (val) => setState(() => acting = val),
-                                ),
-                                _buildStarRater(
-                                  Translations.tr('cinematographyRating'),
-                                  cinematography,
-                                  (val) => setState(() => cinematography = val),
-                                ),
-                              ],
+                        if (movie.isWatched) ...[
+                          Text(
+                            Translations.tr('rateMovie'),
+                            style: TextStyle(
+                              fontSize: SizeTokens.textTitle,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                           SizedBox(height: SizeTokens.paddingMedium),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppTheme.surfaceColor,
-                              borderRadius: SizeTokens.circularRadiusMedium,
-                              border: Border.all(
-                                color: AppTheme.surfaceLightColor,
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                SwitchListTile(
-                                  title: Text(
-                                    Translations.tr('recommend'),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  value: recommend,
-                                  activeThumbColor: AppTheme.primaryColor,
-                                  onChanged: (val) =>
-                                      setState(() => recommend = val),
-                                ),
-                                Divider(
-                                  height: 1,
+
+                          if (review != null) ...[
+                            Container(
+                              decoration: BoxDecoration(
+                                color: AppTheme.surfaceColor,
+                                borderRadius: SizeTokens.circularRadiusMedium,
+                                border: Border.all(
                                   color: AppTheme.surfaceLightColor,
                                 ),
-                                SwitchListTile(
-                                  title: Text(
-                                    Translations.tr('watchAgain'),
+                              ),
+                              padding: EdgeInsets.all(SizeTokens.paddingLarge),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.star,
+                                        color: Colors.amber,
+                                        size: SizeTokens.iconLarge,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        review.overallRating.toStringAsFixed(1),
+                                        style: TextStyle(
+                                          fontSize: SizeTokens.textTitle,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: SizeTokens.paddingMedium),
+                                  Text(
+                                    '${Translations.tr('storyRating')}: ${review.storyRating}/5',
+                                    style: TextStyle(
+                                      color: AppTheme.textSecondaryColor,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${Translations.tr('musicRating')}: ${review.musicRating}/5',
+                                    style: TextStyle(
+                                      color: AppTheme.textSecondaryColor,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${Translations.tr('actingRating')}: ${review.actingRating}/5',
+                                    style: TextStyle(
+                                      color: AppTheme.textSecondaryColor,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${Translations.tr('cinematographyRating')}: ${review.cinematographyRating}/5',
+                                    style: TextStyle(
+                                      color: AppTheme.textSecondaryColor,
+                                    ),
+                                  ),
+                                  SizedBox(height: SizeTokens.paddingSmall),
+                                  Text(
+                                    '${Translations.tr('recommend')}: ${Translations.tr(review.recommend ? 'yes' : 'no')}',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  value: watchAgain,
-                                  activeThumbColor: AppTheme.primaryColor,
-                                  onChanged: (val) =>
-                                      setState(() => watchAgain = val),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          SizedBox(height: SizeTokens.paddingLarge),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
-                                vertical: SizeTokens.paddingMedium,
+                                ],
                               ),
-                              shape: RoundedRectangleBorder(
+                            ),
+                          ] else ...[
+                            Container(
+                              decoration: BoxDecoration(
+                                color: AppTheme.surfaceColor,
                                 borderRadius: SizeTokens.circularRadiusMedium,
+                                border: Border.all(
+                                  color: AppTheme.surfaceLightColor,
+                                ),
+                              ),
+                              padding: EdgeInsets.all(SizeTokens.paddingMedium),
+                              child: Column(
+                                children: [
+                                  _buildStarRater(
+                                    Translations.tr('storyRating'),
+                                    story,
+                                    (val) => setState(() => story = val),
+                                  ),
+                                  _buildStarRater(
+                                    Translations.tr('musicRating'),
+                                    music,
+                                    (val) => setState(() => music = val),
+                                  ),
+                                  _buildStarRater(
+                                    Translations.tr('actingRating'),
+                                    acting,
+                                    (val) => setState(() => acting = val),
+                                  ),
+                                  _buildStarRater(
+                                    Translations.tr('cinematographyRating'),
+                                    cinematography,
+                                    (val) =>
+                                        setState(() => cinematography = val),
+                                  ),
+                                ],
                               ),
                             ),
-                            onPressed: () => _submitReview(context),
-                            child: Text(
-                              Translations.tr('submitReview'),
-                              style: TextStyle(
-                                fontSize: SizeTokens.textLarge,
-                                fontWeight: FontWeight.bold,
+                            SizedBox(height: SizeTokens.paddingMedium),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: AppTheme.surfaceColor,
+                                borderRadius: SizeTokens.circularRadiusMedium,
+                                border: Border.all(
+                                  color: AppTheme.surfaceLightColor,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  SwitchListTile(
+                                    title: Text(
+                                      Translations.tr('recommend'),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    value: recommend,
+                                    activeThumbColor: AppTheme.primaryColor,
+                                    onChanged: (val) =>
+                                        setState(() => recommend = val),
+                                  ),
+                                  Divider(
+                                    height: 1,
+                                    color: AppTheme.surfaceLightColor,
+                                  ),
+                                  SwitchListTile(
+                                    title: Text(
+                                      Translations.tr('watchAgain'),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    value: watchAgain,
+                                    activeThumbColor: AppTheme.primaryColor,
+                                    onChanged: (val) =>
+                                        setState(() => watchAgain = val),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
+
+                            SizedBox(height: SizeTokens.paddingLarge),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: SizeTokens.paddingMedium,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: SizeTokens.circularRadiusMedium,
+                                ),
+                              ),
+                              onPressed: () => _submitReview(context),
+                              child: Text(
+                                Translations.tr('submitReview'),
+                                style: TextStyle(
+                                  fontSize: SizeTokens.textLarge,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ],
                     ],

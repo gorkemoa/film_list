@@ -12,6 +12,7 @@ import 'services/review_service.dart';
 import 'viewmodels/home_view_model.dart';
 import 'viewmodels/add_movie_view_model.dart';
 import 'viewmodels/movie_detail_view_model.dart';
+import 'viewmodels/profile_view_model.dart';
 import 'views/home/home_view.dart';
 import 'core/utils/logger.dart';
 
@@ -45,6 +46,12 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => MovieDetailViewModel(
+            movieCacheService: movieCacheService,
+            reviewService: reviewService,
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ProfileViewModel(
             movieCacheService: movieCacheService,
             reviewService: reviewService,
           ),

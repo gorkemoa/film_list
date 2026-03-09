@@ -8,6 +8,7 @@ import '../../../models/movie.dart';
 import '../../../services/movie_cache_service.dart';
 import '../../../viewmodels/home_view_model.dart';
 import '../../../core/utils/logger.dart';
+import '../../../app/app_constants.dart';
 
 class CustomAddMovieView extends StatefulWidget {
   const CustomAddMovieView({super.key});
@@ -20,14 +21,13 @@ class _CustomAddMovieViewState extends State<CustomAddMovieView> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _yearController = TextEditingController();
-  final _genreController = TextEditingController();
+  final List<String> _selectedGenres = [];
   String _selectedType = 'movie'; // Default
 
   @override
   void dispose() {
     _titleController.dispose();
     _yearController.dispose();
-    _genreController.dispose();
     super.dispose();
   }
 
@@ -38,7 +38,7 @@ class _CustomAddMovieViewState extends State<CustomAddMovieView> {
           id: const Uuid().v4(),
           title: _titleController.text.trim(),
           year: _yearController.text.trim(),
-          genre: _genreController.text.trim(),
+          genre: _selectedGenres.map((key) => Translations.tr(key)).join(', '),
           type: _selectedType,
           isWatched: false,
           watchCount: 0,
@@ -145,20 +145,53 @@ class _CustomAddMovieViewState extends State<CustomAddMovieView> {
                 },
               ),
               SizedBox(height: SizeTokens.paddingMedium),
-              TextFormField(
-                controller: _genreController,
-                decoration: InputDecoration(
-                  labelText: Translations.tr('genre'),
-                  border: const OutlineInputBorder(),
-                  filled: true,
-                  fillColor: AppTheme.surfaceColor,
+              Text(
+                Translations.tr('genre'),
+                style: TextStyle(
+                  fontSize: SizeTokens.textMedium,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textSecondaryColor,
                 ),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) {
-                    return Translations.tr('requiredField');
-                  }
-                  return null;
-                },
+              ),
+              SizedBox(height: SizeTokens.paddingSmall),
+              Container(
+                padding: EdgeInsets.all(SizeTokens.paddingSmall),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(SizeTokens.radiusSmall),
+                  border: Border.all(color: AppTheme.surfaceLightColor),
+                ),
+                child: Wrap(
+                  spacing: SizeTokens.paddingSmall,
+                  runSpacing: 0,
+                  children: AppConstants.genreKeys.map((key) {
+                    final isSelected = _selectedGenres.contains(key);
+                    return FilterChip(
+                      label: Text(
+                        Translations.tr(key),
+                        style: TextStyle(
+                          fontSize: SizeTokens.textSmall,
+                          color: isSelected
+                              ? Colors.white
+                              : AppTheme.textPrimaryColor,
+                        ),
+                      ),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedGenres.add(key);
+                          } else {
+                            _selectedGenres.remove(key);
+                          }
+                        });
+                      },
+                      selectedColor: AppTheme.primaryColor,
+                      checkmarkColor: Colors.white,
+                      backgroundColor: AppTheme.surfaceLightColor,
+                    );
+                  }).toList(),
+                ),
               ),
               SizedBox(height: SizeTokens.paddingXLarge),
               ElevatedButton(

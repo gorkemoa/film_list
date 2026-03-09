@@ -31,4 +31,15 @@ class ReviewService {
       throw Exception('Failed to add review');
     }
   }
+
+  Future<void> clearAllReviews() async {
+    try {
+      final box = LocalDb.reviewBox;
+      await box.clear();
+      Logger.info('All reviews cleared from cache');
+    } catch (e, st) {
+      Logger.error('Failed to clear all reviews from cache', e, st);
+      throw Exception('Failed to clear all reviews');
+    }
+  }
 }

@@ -8,8 +8,10 @@ import '../../models/movie.dart';
 import '../../viewmodels/home_view_model.dart';
 import '../add_movie/add_movie_view.dart';
 import '../movie_detail/movie_detail_view.dart';
+import '../profile/profile_view.dart';
 import '../widgets/custom_poster_widget.dart';
 import '../../app/app_theme.dart';
+import 'widgets/slider_widget.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -27,175 +29,6 @@ class _HomeViewState extends State<HomeView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeViewModel>().init();
     });
-  }
-
-  void _showLanguageDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(Translations.tr('language')),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: const Text('Türkçe'),
-                onTap: () async {
-                  await Translations.changeLanguage(Language.tr);
-                  if (!context.mounted) return;
-                  Navigator.pop(context);
-                  setState(() {});
-                },
-              ),
-              ListTile(
-                title: const Text('English'),
-                onTap: () async {
-                  await Translations.changeLanguage(Language.en);
-                  if (!context.mounted) return;
-                  Navigator.pop(context);
-                  setState(() {});
-                },
-              ),
-              ListTile(
-                title: const Text('Español'),
-                onTap: () async {
-                  await Translations.changeLanguage(Language.es);
-                  if (!context.mounted) return;
-                  Navigator.pop(context);
-                  setState(() {});
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildHero(
-    BuildContext context,
-    Movie movie,
-    HomeViewModel viewModel,
-  ) {
-    return Stack(
-      alignment: Alignment.bottomCenter,
-      children: [
-        // Background Image
-        SizedBox(
-          height: SizeConfig.relativeSize(500),
-          width: double.infinity,
-          child: movie.posterLocalPath != null
-              ? Image.file(
-                  File(movie.posterLocalPath!),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(color: AppTheme.surfaceLightColor),
-                )
-              : (movie.posterUrl != null && movie.posterUrl != 'N/A')
-              ? Image.network(
-                  movie.posterUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      CustomPosterWidget(movie: movie),
-                )
-              : CustomPosterWidget(movie: movie),
-        ),
-        // Gradient
-        Container(
-          height: SizeConfig.relativeSize(500),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.transparent, AppTheme.backgroundColor],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              stops: [0.5, 1.0],
-            ),
-          ),
-        ),
-        // Content
-        Positioned(
-          bottom: SizeTokens.paddingLarge,
-          child: Column(
-            children: [
-              Container(
-                width: MediaQuery.of(context).size.width * 0.9,
-                alignment: Alignment.center,
-                child: Text(
-                  movie.title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: SizeTokens.textLarge * 1.5,
-                    fontWeight: FontWeight.bold,
-                    shadows: const [Shadow(color: Colors.black, blurRadius: 4)],
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (movie.genre.isNotEmpty)
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: SizeTokens.paddingSmall,
-                  ),
-                  child: Text(
-                    movie.genre.split(',').take(3).join(' • '),
-                    style: TextStyle(
-                      color: AppTheme.textSecondaryColor,
-                      fontSize: SizeTokens.textMedium,
-                    ),
-                  ),
-                ),
-              SizedBox(height: SizeTokens.paddingSmall),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.black,
-                      backgroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: SizeTokens.paddingLarge,
-                        vertical: SizeTokens.paddingMedium,
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MovieDetailView(movie: movie),
-                        ),
-                      ).then((_) {
-                        if (!context.mounted) return;
-                        viewModel.init();
-                      });
-                    },
-                    icon: const Icon(Icons.info_outline),
-                    label: const Text(
-                      'Details',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  SizedBox(width: SizeTokens.paddingMedium),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.white),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: SizeTokens.paddingLarge,
-                        vertical: SizeTokens.paddingMedium,
-                      ),
-                    ),
-                    onPressed: () => viewModel.deleteMovie(movie.id),
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text('Remove'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildHorizontalList(
@@ -301,8 +134,8 @@ class _HomeViewState extends State<HomeView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (viewModel.featuredMovie != null)
-            _buildHero(context, viewModel.featuredMovie!, viewModel),
+          if (viewModel.sliderMovies.isNotEmpty)
+            SliderWidget(movies: viewModel.sliderMovies),
           SizedBox(height: SizeTokens.paddingLarge),
           if (viewModel.recommendedMovies.isNotEmpty)
             _buildHorizontalList(
@@ -391,37 +224,6 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildProfileTab(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.account_circle,
-            size: SizeConfig.relativeSize(100),
-            color: AppTheme.textSecondaryColor,
-          ),
-          SizedBox(height: SizeTokens.paddingLarge),
-          Text(
-            Translations.tr('profileTab'),
-            style: TextStyle(
-              fontSize: SizeTokens.textLarge * 1.5,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: SizeTokens.paddingMedium),
-          Text(
-            Translations.tr('profileDesc'),
-            style: TextStyle(
-              color: AppTheme.textSecondaryColor,
-              fontSize: SizeTokens.textMedium,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
@@ -429,20 +231,13 @@ class _HomeViewState extends State<HomeView> {
     // Dynamic Title based on tab
     String appBarTitle = Translations.tr('appName');
     if (_currentIndex == 1) appBarTitle = Translations.tr('watchedTab');
-    if (_currentIndex == 2) appBarTitle = Translations.tr('toWatchTab');
-    if (_currentIndex == 3) appBarTitle = Translations.tr('addTab');
+    if (_currentIndex == 2) appBarTitle = Translations.tr('addTab');
+    if (_currentIndex == 3) appBarTitle = Translations.tr('toWatchTab');
     if (_currentIndex == 4) appBarTitle = Translations.tr('profileTab');
 
     return Scaffold(
       appBar: AppBar(
         title: Text(appBarTitle, style: TextStyle(fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.language),
-            iconSize: SizeTokens.iconMedium,
-            onPressed: _showLanguageDialog,
-          ),
-        ],
       ),
       body: Consumer<HomeViewModel>(
         builder: (context, viewModel, child) {
@@ -464,42 +259,76 @@ class _HomeViewState extends State<HomeView> {
             children: [
               _buildHomeTab(context, viewModel),
               _buildMovieListTab(context, viewModel, viewModel.watchedMovies),
+              const AddMovieView(),
               _buildMovieListTab(context, viewModel, viewModel.toWatchMovies),
-              const AddMovieView(), // Added inline AddMovieView for the "Add" tab
-              _buildProfileTab(context),
+              const ProfileView(),
             ],
           );
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppTheme.surfaceColor,
-        selectedItemColor: AppTheme.primaryColor,
-        unselectedItemColor: AppTheme.textSecondaryColor,
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.home),
-            label: Translations.tr('homeTab'),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.visibility),
-            label: Translations.tr('watchedTab'),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.visibility_off),
-            label: Translations.tr('toWatchTab'),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.add_circle_outline),
-            label: Translations.tr('addTab'),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.person),
-            label: Translations.tr('profileTab'),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => setState(() => _currentIndex = 2),
+        backgroundColor: AppTheme.primaryColor,
+        elevation: 8,
+        shape: const CircleBorder(),
+        child: Icon(Icons.add, color: Colors.white, size: SizeTokens.iconLarge),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        color: AppTheme.surfaceColor,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Left Side
+            Row(
+              children: [
+                _buildNavItem(0, Icons.home, 'homeTab'),
+                _buildNavItem(1, Icons.visibility, 'watchedTab'),
+              ],
+            ),
+            // Right Side
+            Row(
+              children: [
+                _buildNavItem(3, Icons.visibility_off, 'toWatchTab'),
+                _buildNavItem(4, Icons.person, 'profileTab'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String labelKey) {
+    final isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: () => setState(() => _currentIndex = index),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: SizeTokens.paddingMedium),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected
+                  ? AppTheme.primaryColor
+                  : AppTheme.textSecondaryColor,
+              size: SizeTokens.iconMedium,
+            ),
+            Text(
+              Translations.tr(labelKey),
+              style: TextStyle(
+                color: isSelected
+                    ? AppTheme.primaryColor
+                    : AppTheme.textSecondaryColor,
+                fontSize: SizeTokens.textSmall,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
