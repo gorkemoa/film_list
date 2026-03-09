@@ -52,42 +52,31 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   List<Movie> get sliderMovies {
-    // Priority 1: IMDb >= 8.5
-    var topTier = movies.where((m) {
-      final rating = double.tryParse(m.imdbRating ?? '0') ?? 0.0;
-      return rating >= 8.5;
-    }).toList();
+    // Priority: Combinining "To Watch" (unwatched in local DB) and "Suggestions"
+    final localToWatch = movies.where((m) => !m.isWatched).toList();
 
-    // Priority 2: IMDb >= 7.5
-    var midTier = movies.where((m) {
-      final rating = double.tryParse(m.imdbRating ?? '0') ?? 0.0;
-      return rating >= 7.5;
-    }).toList();
-
-    // Priority 3: Suggestions from DiscoveryService
-    // Note: We'll fetch these asynchronously in init() and store them
     List<Movie> combined = [];
 
-    // Interleave local high-rated with suggestions
-    if (topTier.isNotEmpty) {
-      combined.add(topTier.first);
-    }
+    // Add up to 3 local "To Watch" movies (prioritize newest)
+    combined.addAll(localToWatch.reversed.take(3));
 
-    // Always add some suggestions if we have them
+    // Add up to 3 high-rated suggestions from DiscoveryService
+    // These are already sorted or representative
     if (_suggestions.isNotEmpty) {
-      combined.addAll(_suggestions.take(movies.isEmpty ? 5 : 3));
+      combined.addAll(_suggestions.take(3));
     }
 
-    if (midTier.isNotEmpty && combined.length < 5) {
-      combined.addAll(midTier.take(5 - combined.length));
-    }
-
-    // fallback if still too short and we have movies
+    // fallback if still too short and we have local movies
     if (combined.isEmpty && movies.isNotEmpty) {
       combined = movies.reversed.take(5).toList();
     }
 
-    return combined;
+    // fallback for empty case (initial state)
+    if (combined.isEmpty && _suggestions.isNotEmpty) {
+      combined = _suggestions.take(5).toList();
+    }
+
+    return combined.toSet().toList(); // Ensure unique movies
   }
 
   List<Movie> _suggestions = [];

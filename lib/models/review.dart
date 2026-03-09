@@ -9,6 +9,7 @@ class Review {
   final bool recommend;
   final bool watchAgain;
   final DateTime reviewDate;
+  final String? comment;
 
   Review({
     required this.id,
@@ -21,6 +22,7 @@ class Review {
     required this.recommend,
     required this.watchAgain,
     required this.reviewDate,
+    this.comment,
   });
 
   factory Review.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class Review {
       recommend: json['recommend'] == 1 || json['recommend'] == true,
       watchAgain: json['watch_again'] == 1 || json['watch_again'] == true,
       reviewDate: DateTime.parse(json['review_date'] as String),
+      comment: json['comment'] as String?,
     );
   }
 
@@ -50,6 +53,7 @@ class Review {
       'recommend': recommend ? 1 : 0,
       'watch_again': watchAgain ? 1 : 0,
       'review_date': reviewDate.toIso8601String(),
+      'comment': comment,
     };
   }
 }

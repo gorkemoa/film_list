@@ -36,12 +36,7 @@ class _AddMovieViewState extends State<AddMovieView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          Translations.tr('search'),
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
+      resizeToAvoidBottomInset: false,
       body: Column(
         children: [
           Padding(
@@ -115,36 +110,41 @@ class _AddMovieViewState extends State<AddMovieView> {
 
                 if (viewModel.movies.isEmpty &&
                     _searchController.text.isNotEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          Translations.tr('noResults'),
-                          style: TextStyle(color: AppTheme.textSecondaryColor),
-                        ),
-                        SizedBox(height: SizeTokens.paddingLarge),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const CustomAddMovieView(),
-                              ),
-                            );
-                          },
-                          icon: Icon(Icons.add, size: SizeTokens.iconMedium),
-                          label: Text(Translations.tr('addManually')),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryColor,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: SizeTokens.paddingLarge,
-                              vertical: SizeTokens.paddingMedium,
+                  return SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              Translations.tr('noResults'),
+                              style: TextStyle(color: AppTheme.textSecondaryColor),
                             ),
-                          ),
+                            SizedBox(height: SizeTokens.paddingLarge),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const CustomAddMovieView(),
+                                  ),
+                                );
+                              },
+                              icon: Icon(Icons.add, size: SizeTokens.iconMedium),
+                              label: Text(Translations.tr('addManually')),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.primaryColor,
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: SizeTokens.paddingLarge,
+                                  vertical: SizeTokens.paddingMedium,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 }

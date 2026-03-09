@@ -32,6 +32,17 @@ class ReviewService {
     }
   }
 
+  Future<void> deleteReview(String reviewId) async {
+    try {
+      final box = LocalDb.reviewBox;
+      await box.delete(reviewId);
+      Logger.info('Review deleted: $reviewId');
+    } catch (e, st) {
+      Logger.error('Failed to delete review: $reviewId', e, st);
+      throw Exception('Failed to delete review');
+    }
+  }
+
   Future<void> clearAllReviews() async {
     try {
       final box = LocalDb.reviewBox;

@@ -53,7 +53,7 @@ class MovieDetailViewModel extends ChangeNotifier {
       }
 
       // If details are missing, try to fetch from OMDb
-      if (currentMovie!.director == null && currentMovie!.imdbId != null) {
+      if ((currentMovie!.director == null || currentMovie!.director == 'N/A') && currentMovie!.imdbId != null) {
         final detailedMovie = await _omdbDetailService.getMovieDetail(
           currentMovie!.imdbId!,
         );
@@ -68,6 +68,12 @@ class MovieDetailViewModel extends ChangeNotifier {
             boxOffice: detailedMovie.boxOffice,
             rated: detailedMovie.rated,
             released: detailedMovie.released,
+            genre: detailedMovie.genre,
+            runtime: detailedMovie.runtime,
+            imdbRating: detailedMovie.imdbRating,
+            imdbVotes: detailedMovie.imdbVotes,
+            metascore: detailedMovie.metascore,
+            awards: detailedMovie.awards,
           );
           // If already local, update the cache
           if (isLocal) {
@@ -141,6 +147,7 @@ class MovieDetailViewModel extends ChangeNotifier {
     required int cinematography,
     required bool recommend,
     required bool watchAgain,
+    String? comment,
   }) async {
     if (currentMovie == null) return;
 
@@ -160,6 +167,7 @@ class MovieDetailViewModel extends ChangeNotifier {
         recommend: recommend,
         watchAgain: watchAgain,
         reviewDate: DateTime.now(),
+        comment: comment,
       );
 
       await _reviewService.addReview(review);
@@ -167,6 +175,24 @@ class MovieDetailViewModel extends ChangeNotifier {
     } catch (e) {
       errorMessage = e.toString();
       Logger.error('Failed to rate movie', e);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteReview() async {
+    if (currentReview == null) return;
+
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      await _reviewService.deleteReview(currentReview!.id);
+      currentReview = null;
+    } catch (e) {
+      errorMessage = e.toString();
+      Logger.error('Failed to delete review', e);
     } finally {
       isLoading = false;
       notifyListeners();

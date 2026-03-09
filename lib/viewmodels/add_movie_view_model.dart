@@ -80,10 +80,19 @@ class AddMovieViewModel extends ChangeNotifier {
 
       // 2. Fetch from Omdb Search Service
       final results = await _omdbSearchService.searchMovies(query);
-      movies = results;
+      
+      // OPTIMIZATION: Fetch basic details (genre/rating) for all results 
+      // to avoid empty fields in the search list and provide better caching
+      final List<Movie> enrichedResults = [];
+      for (var movie in results.take(10)) {
+        final detailed = await _omdbDetailService.getMovieDetail(movie.imdbId ?? '');
+        enrichedResults.add(detailed ?? movie);
+      }
+
+      movies = enrichedResults;
 
       // 3. Save to Search Cache
-      await _saveSearchCache(query, results);
+      await _saveSearchCache(query, enrichedResults);
     } catch (e) {
       errorMessage = e.toString();
       Logger.error('AddMovieViewModel.searchMovies error', e);
@@ -114,7 +123,7 @@ class AddMovieViewModel extends ChangeNotifier {
               imdbId: c.imdbId,
               title: c.movieTitle,
               year: c.year,
-              genre: '', // Cached from search which lacks genre
+              genre: '', // Genre is now enriched during search and stored separately in local DB if saved
               posterUrl: c.poster,
               isWatched: false,
               createdAt: c.createdAt,

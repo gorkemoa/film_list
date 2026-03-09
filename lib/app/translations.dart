@@ -84,6 +84,7 @@ class Translations {
     'requiredField:Bu alan zorunludur:This field is required:Este campo es obligatorio',
     'search:Cevrimiçi Ara:Search Online:Buscar',
     'searchPlaceholder:Film veya dizi adı...:Movie or TV show name...:Nombre...',
+    'searchTitle:Dizi Film Ara:Search Movies & TV:Buscar Películas y Series',
     'searching:Aranıyor...:Searching...:Buscando...',
     'noResults:Sonuç bulunamadı.:No results found.:No se encontraron resultados.',
     'featured:Öne Çıkanlar:Featured:Destacado',
@@ -131,6 +132,14 @@ class Translations {
     'boxOfficeLabel:Gişe:Box Office:Recaudación',
     'ratedLabel:Sınıflandırma:Rated:Clasificación',
     'releasedLabel:Vizyon:Released:Estrenado',
+    'commentLabel:Yorumunuz (Opsiyonel):Your Comment (Optional):Tu Comentario (Opcional)',
+    'deleteReview:Değerlendirmeyi Sil:Delete Review:Eliminar Valoración',
+    'editReview:Değerlendirmeyi Düzenle:Edit Review:Editar Valoración',
+    'deleteReviewConfirm:Bu değerlendirmeyi silmek istediğinize emin misiniz?:Are you sure you want to delete this review?:¿Estás seguro de que quieres eliminar esta valoración?',
+    'edit:Düzenle:Edit:Editar',
+    'ratingHigher:Bu yapıma IMDb\'den {diff} puan daha yüksek verdiniz!:You rated this {diff} points HIGHER than IMDb!:¡Puntuaste esto {diff} puntos MÁS que en IMDb!',
+    'ratingLower:Bu yapıma IMDb\'den {diff} puan daha düşük verdiniz.:You rated this {diff} points LOWER than IMDb.:Puntuaste esto {diff} puntos MENOS que en IMDb.',
+    'ratingMatch:Puanınız IMDb ile tam olarak eşleşiyor!:Your rating matches IMDb exactly!:¡Tu puntuación coincide exactamente con IMDb!',
   ];
 
   static String tr(String key) {

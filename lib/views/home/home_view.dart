@@ -264,16 +264,22 @@ class _HomeViewState extends State<HomeView> {
     SizeConfig.init(context);
 
     // Dynamic Title based on tab
-    String appBarTitle = Translations.tr('appName');
+    String? appBarTitle;
     if (_currentIndex == 1) appBarTitle = Translations.tr('watchedTab');
     if (_currentIndex == 2) appBarTitle = Translations.tr('addTab');
     if (_currentIndex == 3) appBarTitle = Translations.tr('toWatchTab');
     if (_currentIndex == 4) appBarTitle = Translations.tr('profileTab');
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(appBarTitle, style: TextStyle(fontWeight: FontWeight.bold)),
-      ),
+      resizeToAvoidBottomInset: false,
+      appBar: appBarTitle != null
+          ? AppBar(
+              title: Text(
+                appBarTitle,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            )
+          : null,
       body: Consumer<HomeViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isLoading) {
