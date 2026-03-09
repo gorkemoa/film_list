@@ -112,23 +112,19 @@ class _MovieDetailViewState extends State<MovieDetailView> {
 
   Widget _buildSliverBackground(BuildContext context, Movie movie) {
     return Stack(
-      fit: StackFit.expand,
+      fit: StackFit.passthrough,
       children: [
         if (movie.posterLocalPath != null)
           Image.file(
             File(movie.posterLocalPath!),
-            fit: BoxFit.cover,
-            cacheWidth: 800,
-            cacheHeight: 1200,
+            fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) =>
                 CustomPosterWidget(movie: movie),
           )
         else if (movie.posterUrl != null && movie.posterUrl != 'N/A')
           Image.network(
             movie.posterUrl!,
-            fit: BoxFit.cover,
-            cacheWidth: 800,
-            cacheHeight: 1200,
+            fit: BoxFit.fill,
             errorBuilder: (context, error, stackTrace) =>
                 CustomPosterWidget(movie: movie),
           )
@@ -433,7 +429,7 @@ class _MovieDetailViewState extends State<MovieDetailView> {
           return CustomScrollView(
             slivers: [
               SliverAppBar(
-                expandedHeight: SizeConfig.relativeSize(350),
+                expandedHeight: SizeConfig.relativeSize(450),
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
                   title: Text(

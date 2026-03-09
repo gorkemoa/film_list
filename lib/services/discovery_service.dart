@@ -35,6 +35,17 @@ class DiscoveryService {
     'night',
     'dream',
     'force',
+    'quest',
+    'king',
+    'dragon',
+    'fire',
+    'black',
+    'white',
+    'gold',
+    'dead',
+    'lost',
+    'city',
+    'road',
   ];
 
   // Simple in-memory cache to avoid repeated heavy API calls in one session
@@ -46,7 +57,7 @@ class DiscoveryService {
   /// Strategy:
   /// 1. Analyze user's current list for genres/keywords.
   /// 2. If empty, use generic keywords.
-  /// 3. Fetch details -> Filter by IMDb rating >= 8.0.
+  /// 3. Fetch details -> Filter by IMDb rating >= 7.0 for better availability.
   /// 4. Exclude movies already in user's list.
   Future<List<Movie>> getSuggestions() async {
     // Return cache if valid
@@ -67,12 +78,10 @@ class DiscoveryService {
       final random = Random();
       String keyword;
       int page =
-          random.nextInt(3) + 1; // Narrower page range for better relevance
-      bool isGenericSearch = false;
+          random.nextInt(5) + 1; // Slightly wider page range to get variety
 
       if (userMovies.isEmpty) {
         keyword = _keywords[random.nextInt(_keywords.length)];
-        isGenericSearch = true;
         Logger.info(
           'User list empty, searching discovery for generic: $keyword (page $page)',
         );
@@ -82,9 +91,10 @@ class DiscoveryService {
         final genres = movieToAnalyze.genre
             .split(',')
             .map((e) => e.trim())
+            .where((g) => g.isNotEmpty && g != 'N/A')
             .toList();
 
-        if (genres.isNotEmpty && random.nextBool()) {
+        if (genres.isNotEmpty && random.nextDouble() < 0.7) {
           keyword = genres[random.nextInt(genres.length)];
           Logger.info(
             'Searching discovery based on user genre: $keyword (page $page)',
@@ -95,7 +105,7 @@ class DiscoveryService {
               .split(' ')
               .where((w) => w.length > 3)
               .toList();
-          if (titleWords.isNotEmpty) {
+          if (titleWords.isNotEmpty && random.nextDouble() < 0.5) {
             keyword = titleWords[random.nextInt(titleWords.length)];
             Logger.info(
               'Searching discovery based on user title: $keyword (page $page)',
@@ -112,11 +122,11 @@ class DiscoveryService {
         page: page,
       );
 
-      // If search failed or was too broad, and it wasn't already a generic fallback,
-      // try one more time with a guaranteed good generic keyword
-      if (searchResults.isEmpty && !isGenericSearch) {
+      // If search failed or was too broad, or returned few results,
+      // try with guaranteed generic keywords and page 1
+      if (searchResults.length < 3) {
         Logger.info(
-          'Personalized search found no results, trying generic fallback',
+          'Search found insufficient results (${searchResults.length}), trying guaranteed generic fallback',
         );
         final fallbackKeyword = _keywords[random.nextInt(_keywords.length)];
         final fallbackResults = await _omdbSearchService.searchMovies(
@@ -124,8 +134,7 @@ class DiscoveryService {
           page: 1,
         );
         if (fallbackResults.isNotEmpty) {
-          // Continue with fallback results
-          return await _processSearchResults(fallbackResults, userImdbIds);
+          searchResults = [...searchResults, ...fallbackResults];
         }
       }
 
@@ -150,8 +159,8 @@ class DiscoveryService {
 
     if (filteredSearch.isEmpty) return [];
 
-    // Limit search results to avoid too many API calls (max 5-8 details)
-    final itemsToCheck = filteredSearch.take(8).toList();
+    // Limit search results to avoid too many API calls (max 10 details for better hit rate)
+    final itemsToCheck = filteredSearch.take(10).toList();
 
     // Fetch details in parallel
     final detailFutures = itemsToCheck.map(
@@ -159,12 +168,12 @@ class DiscoveryService {
     );
     final details = await Future.wait(detailFutures);
 
-    // Filter by rating >= 8.0 and valid poster
+    // Filter by rating >= 7.0 (more inclusive for consistent suggestions) and valid poster
     final highRated = details
         .whereType<Movie>()
         .where((m) {
           final rating = double.tryParse(m.imdbRating ?? '0') ?? 0.0;
-          return rating >= 8.0 &&
+          return rating >= 7.0 &&
               m.posterUrl != null &&
               m.posterUrl != 'N/A' &&
               !userImdbIds.contains(m.imdbId);
@@ -175,8 +184,20 @@ class DiscoveryService {
     if (highRated.isNotEmpty) {
       _cachedSuggestions = highRated;
       _lastFetch = DateTime.now();
+    } else if (_cachedSuggestions == null || _cachedSuggestions!.isEmpty) {
+      // If we found NOTHING and have nothing cached, try one more desperate attempt
+      // with a very popular movie to ensure the UI isn't empty
+      Logger.info('No high rated movies found, attempting desperate fallback');
+      final topMovie = await _omdbDetailService.getMovieDetail('tt0468569'); // The Dark Knight
+      if (topMovie != null) {
+        final suggestion = topMovie.copyWith(id: 'suggested_${topMovie.imdbId}');
+        _cachedSuggestions = [suggestion];
+        _lastFetch = DateTime.now();
+        return [suggestion];
+      }
     }
 
-    return highRated;
+    return highRated.isEmpty ? (_cachedSuggestions ?? []) : highRated;
   }
 }
+

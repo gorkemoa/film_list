@@ -95,7 +95,6 @@ class _SliderWidgetState extends State<SliderWidget> {
       child: Stack(
         alignment: Alignment.bottomCenter,
         children: [
-          // Background Image
           SizedBox(
             height: SizeConfig.relativeSize(500),
             width: double.infinity,
@@ -131,7 +130,7 @@ class _SliderWidgetState extends State<SliderWidget> {
           ),
           // Content
           Positioned(
-            top: SizeTokens.paddingMedium,
+            bottom: SizeTokens.paddingMedium,
             right: SizeTokens.paddingMedium,
             child: movie.id.startsWith('suggested_')
                 ? Container(
