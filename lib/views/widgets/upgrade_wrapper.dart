@@ -4,9 +4,7 @@ import '../../app/app_theme.dart';
 import '../../core/responsive/size_tokens.dart';
 
 /// Uygulama güncelleme kontrolcüsü.
-/// [testMode] = true iken her açılışta güncelleme dialogunu gösterir.
-/// Production'a geçişte [testMode] = false yapın ve
-/// [debugDisplayAlways] = false olacak şekilde Upgrader'ı konfigüre edin.
+/// Uygulama Store'da yeni bir sürüm olduğunda zorunlu güncelleme dialogu gösterir.
 class UpgradeWrapper extends StatefulWidget {
   final Widget child;
 
@@ -17,12 +15,6 @@ class UpgradeWrapper extends StatefulWidget {
 }
 
 class _UpgradeWrapperState extends State<UpgradeWrapper> {
-  // ── Test modu ──────────────────────────────────────────────────────────────
-  // true: dialog her seferinde gösterilir (geliştirme/test için)
-  // false: yalnızca gerçek güncelleme varsa gösterilir
-  static const bool _testMode = true;
-  // ──────────────────────────────────────────────────────────────────────────
-
   late final Upgrader _upgrader;
   bool _dialogShown = false;
 
@@ -30,9 +22,7 @@ class _UpgradeWrapperState extends State<UpgradeWrapper> {
   void initState() {
     super.initState();
     _upgrader = Upgrader(
-      debugLogging: _testMode,
-      debugDisplayAlways: _testMode,
-      durationUntilAlertAgain: Duration.zero,
+      durationUntilAlertAgain: const Duration(days: 1),
     );
     _checkForUpdate();
   }
@@ -41,7 +31,7 @@ class _UpgradeWrapperState extends State<UpgradeWrapper> {
     await _upgrader.initialize();
     if (!mounted || _dialogShown) return;
 
-    final bool shouldShow = _testMode || _upgrader.isUpdateAvailable();
+    final bool shouldShow = _upgrader.isUpdateAvailable();
 
     if (shouldShow) {
       _dialogShown = true;
@@ -56,10 +46,7 @@ class _UpgradeWrapperState extends State<UpgradeWrapper> {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => _UpgradeDialog(
-        upgrader: _upgrader,
-        testMode: _testMode,
-      ),
+      builder: (_) => _UpgradeDialog(upgrader: _upgrader),
     );
   }
 
@@ -73,16 +60,14 @@ class _UpgradeWrapperState extends State<UpgradeWrapper> {
 
 class _UpgradeDialog extends StatelessWidget {
   final Upgrader upgrader;
-  final bool testMode;
 
-  const _UpgradeDialog({required this.upgrader, required this.testMode});
+  const _UpgradeDialog({required this.upgrader});
 
   @override
   Widget build(BuildContext context) {
     final String installedVersion =
         upgrader.currentInstalledVersion ?? '1.0.0';
-    final String newVersion =
-        testMode ? '2.0.0' : (upgrader.currentAppStoreVersion ?? '');
+    final String newVersion = upgrader.currentAppStoreVersion ?? '';
 
     return PopScope(
       canPop: false,
