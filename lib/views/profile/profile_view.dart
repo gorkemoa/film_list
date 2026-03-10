@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:provider/provider.dart';
 import '../../app/translations.dart';
 import '../../app/app_theme.dart';
@@ -142,6 +143,26 @@ class ProfileView extends StatelessWidget {
                         ),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => _showLanguageDialog(context, viewModel),
+                      ),
+                      Divider(height: 1, indent: SizeTokens.paddingLarge),
+                      // Rate App
+                      ListTile(
+                        leading: Icon(
+                          Icons.star_rate,
+                          color: AppTheme.primaryColor,
+                        ),
+                        title: Text(Translations.tr('rateApp')),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () async {
+                          final inAppReview = InAppReview.instance;
+                          // Gerçek Mod: Doğrudan sistemin native puanlama diyaloğunu açar
+                          if (await inAppReview.isAvailable()) {
+                            await inAppReview.requestReview();
+                          } else {
+                            // Desteklenmeyen durumlarda mağaza sayfasını açar
+                            await inAppReview.openStoreListing();
+                          }
+                        },
                       ),
                       Divider(height: 1, indent: SizeTokens.paddingLarge),
                       // Clear Data

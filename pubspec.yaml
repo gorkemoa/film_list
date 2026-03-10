@@ -45,6 +45,7 @@ dependencies:
   http: ^1.6.0
   translator: ^1.0.4+1
   upgrader: ^11.0.0
+  in_app_review: ^2.0.9
 
 dev_dependencies:
   flutter_test:

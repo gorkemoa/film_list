@@ -84,6 +84,7 @@ class Translations {
     'settings:Ayarlar:Settings:Ajustes',
     'language:Dil:Language:Idioma',
     'clearData:Verileri Temizle:Clear Data:Borrar Datos',
+    'rateApp:Uygulamayı Puanla:Rate the App:Calificar la App',
     'clearDataConfirm:Tüm veriler silinecek. Emin misiniz?:All data will be deleted. Are you sure?:¿Se eliminarán todos los datos. ¿Estás seguro?',
     'addMovie:İçerik Ekle:Add Content:Añadir Contenido',
     'title:Başlık:Title:Título',
