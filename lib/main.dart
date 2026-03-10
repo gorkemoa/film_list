@@ -16,6 +16,7 @@ import 'viewmodels/movie_detail_view_model.dart';
 import 'viewmodels/profile_view_model.dart';
 import 'services/translation_service.dart';
 import 'views/home/home_view.dart';
+import 'views/widgets/upgrade_wrapper.dart';
 import 'core/utils/logger.dart';
 
 void main() async {
@@ -90,7 +91,7 @@ class FilmListApp extends StatelessWidget {
         Translations.applyDeviceLocale(deviceLocale);
         return deviceLocale;
       },
-      home: const HomeView(),
+      home: const UpgradeWrapper(child: HomeView()),
     );
   }
 }
