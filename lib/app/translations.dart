@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../app/app_constants.dart';
 import '../core/utils/logger.dart';
@@ -7,31 +8,64 @@ enum Language { tr, en, es }
 class Translations {
   static Language _currentLanguage = Language.en;
 
+  /// True when the user has explicitly chosen a language inside the app.
+  /// When false, device locale detection (via [applyDeviceLocale]) will apply.
+  static bool _userExplicitlySet = false;
+
   static Language get currentLanguage => _currentLanguage;
 
   static Future<void> init() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final langCode = prefs.getString(AppConstants.prefsLanguageKey);
-      if (langCode != null) {
-        if (langCode == 'tr') {
+      final savedCode = prefs.getString(AppConstants.prefsLanguageKey);
+
+      if (savedCode != null) {
+        // User has an explicit saved preference — honour it.
+        _userExplicitlySet = true;
+        if (savedCode == 'tr') {
           _currentLanguage = Language.tr;
-        } else if (langCode == 'es') {
+        } else if (savedCode == 'es') {
           _currentLanguage = Language.es;
         } else {
           _currentLanguage = Language.en;
         }
+        Logger.info('Saved language loaded: ${_currentLanguage.name}');
       } else {
-        _currentLanguage = Language.en;
+        // No saved preference — applyDeviceLocale() will run later via
+        // MaterialApp.localeResolutionCallback for reliable detection.
+        _userExplicitlySet = false;
+        Logger.info('No saved language preference; waiting for device locale.');
       }
-      Logger.info('Language initialized: ${_currentLanguage.name}');
     } catch (e, st) {
       Logger.error('Error initializing language', e, st);
     }
   }
 
+  /// Called from [MaterialApp.localeResolutionCallback] where Flutter has
+  /// definitely resolved the device locale.  Only applied when the user has
+  /// NOT explicitly chosen a language inside the app.
+  static void applyDeviceLocale(Locale? deviceLocale) {
+    if (_userExplicitlySet) return;
+    if (deviceLocale == null) {
+      _currentLanguage = Language.en;
+      Logger.info('Device locale null → defaulting to en');
+      return;
+    }
+    final code = deviceLocale.languageCode.toLowerCase();
+    if (code == 'tr') {
+      _currentLanguage = Language.tr;
+    } else if (code == 'es') {
+      _currentLanguage = Language.es;
+    } else {
+      // All other languages (fr, de, etc.) → English (default).
+      _currentLanguage = Language.en;
+    }
+    Logger.info('Device locale: $code → ${_currentLanguage.name}');
+  }
+
   static Future<void> changeLanguage(Language lang) async {
     _currentLanguage = lang;
+    _userExplicitlySet = true;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.prefsLanguageKey, lang.name);
     Logger.info('Language changed to: ${lang.name}');

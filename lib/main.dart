@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'app/app_theme.dart';
@@ -75,6 +76,20 @@ class FilmListApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Offline Film List',
       theme: AppTheme.lightTheme,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('tr'),
+        Locale('es'),
+      ],
+      localeResolutionCallback: (deviceLocale, supportedLocales) {
+        Translations.applyDeviceLocale(deviceLocale);
+        return deviceLocale;
+      },
       home: const HomeView(),
     );
   }
