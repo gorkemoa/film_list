@@ -319,24 +319,28 @@ class _HomeViewState extends State<HomeView> {
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
         color: AppTheme.surfaceColor,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Left Side
-            Row(
-              children: [
-                _buildNavItem(0, Icons.home, 'homeTab'),
-                _buildNavItem(1, Icons.visibility, 'watchedTab'),
-              ],
-            ),
-            // Right Side
-            Row(
-              children: [
-                _buildNavItem(3, Icons.visibility_off, 'toWatchTab'),
-                _buildNavItem(4, Icons.person, 'profileTab'),
-              ],
-            ),
-          ],
+        padding: EdgeInsets.zero,
+        height: SizeConfig.relativeSize(70) + MediaQuery.of(context).padding.bottom,
+        child: SafeArea(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Left Side
+              Row(
+                children: [
+                  _buildNavItem(0, Icons.home, 'homeTab'),
+                  _buildNavItem(1, Icons.visibility, 'watchedTab'),
+                ],
+              ),
+              // Right Side
+              Row(
+                children: [
+                  _buildNavItem(3, Icons.visibility_off, 'toWatchTab'),
+                  _buildNavItem(4, Icons.person, 'profileTab'),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
