@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../app/app_constants.dart';
 import '../core/utils/logger.dart';
 
-enum Language { tr, en, es }
+enum Language { tr, en, es, fr, pt, de }
 
 class Translations {
   static Language _currentLanguage = Language.en;
@@ -26,6 +26,12 @@ class Translations {
           _currentLanguage = Language.tr;
         } else if (savedCode == 'es') {
           _currentLanguage = Language.es;
+        } else if (savedCode == 'fr') {
+          _currentLanguage = Language.fr;
+        } else if (savedCode == 'pt') {
+          _currentLanguage = Language.pt;
+        } else if (savedCode == 'de') {
+          _currentLanguage = Language.de;
         } else {
           _currentLanguage = Language.en;
         }
@@ -56,8 +62,14 @@ class Translations {
       _currentLanguage = Language.tr;
     } else if (code == 'es') {
       _currentLanguage = Language.es;
+    } else if (code == 'fr') {
+      _currentLanguage = Language.fr;
+    } else if (code == 'pt') {
+      _currentLanguage = Language.pt;
+    } else if (code == 'de') {
+      _currentLanguage = Language.de;
     } else {
-      // All other languages (fr, de, etc.) → English (default).
+      // All other languages → English (default).
       _currentLanguage = Language.en;
     }
     Logger.info('Device locale: $code → ${_currentLanguage.name}');
@@ -76,105 +88,108 @@ class Translations {
     final langCode = prefs.getString(AppConstants.prefsLanguageKey);
     if (langCode == 'tr') return Language.tr;
     if (langCode == 'es') return Language.es;
+    if (langCode == 'fr') return Language.fr;
+    if (langCode == 'pt') return Language.pt;
+    if (langCode == 'de') return Language.de;
     return Language.en;
   }
 
-  // Format => key:TR:EN:ES
+  // Format => key:TR:EN:ES:FR:PT:DE
   static const List<String> _dictionary = [
-    'settings:Ayarlar:Settings:Ajustes',
-    'language:Dil:Language:Idioma',
-    'clearData:Verileri Temizle:Clear Data:Borrar Datos',
-    'rateApp:Uygulamayı Puanla:Rate the App:Calificar la App',
-    'clearDataConfirm:Tüm veriler silinecek. Emin misiniz?:All data will be deleted. Are you sure?:¿Se eliminarán todos los datos. ¿Estás seguro?',
-    'addMovie:İçerik Ekle:Add Content:Añadir Contenido',
-    'title:Başlık:Title:Título',
-    'type:Tür:Type:Tipo',
-    'movie:Film:Movie:Película',
-    'tv_show:Dizi:TV Show:Serie de TV',
-    'year:Yıl:Year:Año',
-    'genre:Kategori:Genre:Género',
-    'poster:Afiş (URL):Poster (URL):Póster (URL)',
-    'save:Kaydet:Save:Guardar',
-    'cancel:İptal:Cancel:Cancelar',
-    'isWatched:İzlendi mi?:Is Watched?:¿Visto?',
-    'watched:İzlendi:Watched:Visto',
-    'notWatched:İzlenmedi:Not Watched:No visto',
-    'watchCount:İzlenme Sayısı:Watch Count:Veces Visto',
-    'watchOneMoreTime:Tekrar İzledim (+1):Watched Again (+1):Visto de nuevo (+1)',
-    'yes:Evet:Yes:Sí',
-    'no:Hayır:No:No',
-    'rateMovie:Değerlendir:Rate:Valorar',
-    'storyRating:Hikaye:Story:Historia',
-    'musicRating:Müzik:Music:Música',
-    'actingRating:Oyunculuk:Acting:Actuación',
-    'cinematographyRating:Sinematografi:Cinematography:Cinematografía',
-    'recommend:Başkalarına önerir misin?:Would you recommend to others?:¿Recomendarías a otros?',
-    'watchAgain:Tekrar izler misin?:Would you watch again?:¿Volverías a ver?',
-    'submitReview:Puanı Kaydet:Submit Review:Enviar Valoración',
-    'overallRating:Genel Puan:Overall Rating:Valoración General',
-    'reviews:Değerlendirmeler:Reviews:Valoraciones',
-    'delete:Sil:Delete:Eliminar',
-    'emptyMovies:Henüz içerik eklenmedi.:No content added yet.:Aún no se ha añadido contenido.',
-    'emptyReviews:Henüz değerlendirme yok.:No reviews yet.:Aún no hay valoraciones.',
-    'requiredField:Bu alan zorunludur:This field is required:Este campo es obligatorio',
-    'search:Cevrimiçi Ara:Search Online:Buscar',
-    'searchPlaceholder:Film veya dizi adı...:Movie or TV show name...:Nombre...',
-    'searchTitle:Dizi Film Ara:Search Movies & TV:Buscar Películas y Series',
-    'searching:Aranıyor...:Searching...:Buscando...',
-    'noResults:Sonuç bulunamadı.:No results found.:No se encontraron resultados.',
-    'featured:Öne Çıkanlar:Featured:Destacado',
-    'recommended:Önerilen Dizi ve Filmler:Recommended Series & Movies:Series y Películas Recomendadas',
-    'myList:Listem:My List:Mi Lista',
-    'homeTab:Anasayfa:Home:Inicio',
-    'addTab:Ekle:Add:Añadir',
-    'addManually:Manuel Ekle:Add Manually:Añadir Manualmente',
-    'customAddTitle:Özel İçerik Ekle:Add Custom Content:Añadir Contenido Personalizado',
-    'saveCustom:Kaydet:Save:Guardar',
-    'watchedTab:İzlediklerim:Watched:Visto',
-    'toWatchTab:İzleyeceklerim:To Watch:Para Ver',
-    'profileTab:Profilim:Profile:Perfil',
-    'profileDesc:Profil detayları (Yakında):Profile details (Soon):Detalles del perfil (Pronto)',
-    'details:Detaylar:Details:Detalles',
-    'suggested:Öneri:Suggested:Sugerido',
-    'addToList:Listeme Ekle:Add to List:Añadir a lista',
-    'action:Aksiyon:Action:Acción',
-    'adventure:Macera:Adventure:Aventura',
-    'animation:Animasyon:Animation:Animación',
-    'biography:Biyografi:Biography:Biografía',
-    'comedy:Komedi:Comedy:Comedia',
-    'crime:Suç:Crime:Crimen',
-    'documentary:Belgesel:Documentary:Documental',
-    'drama:Dram:Drama:Drama',
-    'family:Aile:Family:Familia',
-    'fantasy:Fantastik:Fantasy:Fantasía',
-    'history:Tarih:History:Historia',
-    'horror:Korku:Horror:Terror',
-    'music:Müzik:Music:Música',
-    'mystery:Gizem:Mystery:Misterio',
-    'romance:Romantik:Romance:Romance',
-    'sciFi:Bilim Kurgu:Sci-Fi:Ciencia Ficción',
-    'sport:Spor:Sport:Deportes',
-    'thriller:Gerilim:Thriller:Suspense',
-    'war:Savaş:War:Guerra',
-    'western:Batı:Western:Western',
-    'plotDescription:Film Özeti:Movie Plot:Sinopsis',
-    'movieInfoTab:Film/Dizi Bilgisi:Movie/TV Info:Información',
-    'directorLabel:Yönetmen:Director:Director',
-    'writerLabel:Yazar:Writer:Escritor',
-    'actorsLabel:Oyuncular:Actors:Actores',
-    'languageLabel:Dil:Language:Idioma',
-    'countryLabel:Ülke:Country:País',
-    'boxOfficeLabel:Gişe:Box Office:Recaudación',
-    'ratedLabel:Sınıflandırma:Rated:Clasificación',
-    'releasedLabel:Vizyon:Released:Estrenado',
-    'commentLabel:Yorumunuz (Opsiyonel):Your Comment (Optional):Tu Comentario (Opcional)',
-    'deleteReview:Değerlendirmeyi Sil:Delete Review:Eliminar Valoración',
-    'editReview:Değerlendirmeyi Düzenle:Edit Review:Editar Valoración',
-    'deleteReviewConfirm:Bu değerlendirmeyi silmek istediğinize emin misiniz?:Are you sure you want to delete this review?:¿Estás seguro de que quieres eliminar esta valoración?',
-    'edit:Düzenle:Edit:Editar',
-    'ratingHigher:Bu yapıma IMDb\'den {diff} puan daha yüksek verdiniz!:You rated this {diff} points HIGHER than IMDb!:¡Puntuaste esto {diff} puntos MÁS que en IMDb!',
-    'ratingLower:Bu yapıma IMDb\'den {diff} puan daha düşük verdiniz.:You rated this {diff} points LOWER than IMDb.:Puntuaste esto {diff} puntos MENOS que en IMDb.',
-    'ratingMatch:Puanınız IMDb ile tam olarak eşleşiyor!:Your rating matches IMDb exactly!:¡Tu puntuación coincide exactamente con IMDb!',
+    'settings:Ayarlar:Settings:Ajustes:Paramètres:Configurações:Einstellungen',
+    'language:Dil:Language:Idioma:Langue:Idioma:Sprache',
+    'clearData:Verileri Temizle:Clear Data:Borrar Datos:Effacer les données:Limpar Dados:Daten löschen',
+    'rateApp:Uygulamayı Puanla:Rate the App:Calificar la App:Évaluer l\'app:Avaliar o App:App bewerten',
+    'clearDataConfirm:Tüm veriler silinecek. Emin misiniz?:All data will be deleted. Are you sure?:¿Se eliminarán todos los datos. ¿Estás seguro?:Toutes les données seront supprimées. Êtes-vous sûr ?:Todos os dados serão apagados. Tem certeza?:Alle Daten werden gelöscht. Sind Sie sicher?',
+    'addMovie:İçerik Ekle:Add Content:Añadir Contenido:Ajouter du contenu:Adicionar Conteúdo:Inhalt hinzufügen',
+    'title:Başlık:Title:Título:Titre:Título:Titel',
+    'type:Tür:Type:Tipo:Type:Tipo:Typ',
+    'movie:Film:Movie:Película:Film:Filme:Film',
+    'tv_show:Dizi:TV Show:Serie de TV:Série TV:Série de TV:TV-Serie',
+    'year:Yıl:Year:Año:Année:Ano:Jahr',
+    'genre:Kategori:Genre:Género:Genre:Gênero:Genre',
+    'poster:Afiş (URL):Poster (URL):Póster (URL):Affiche (URL):Pôster (URL):Poster (URL)',
+    'save:Kaydet:Save:Guardar:Enregistrer:Salvar:Speichern',
+    'cancel:İptal:Cancel:Cancelar:Annuler:Cancelar:Abbrechen',
+    'isWatched:İzlendi mi?:Is Watched?:¿Visto?:Est regardé ?:Assistido?:Gesehen?',
+    'watched:İzlendi:Watched:Visto:Regardé:Assistido:Gesehen',
+    'notWatched:İzlenmedi:Not Watched:No visto:Non regardé:Não assistido:Nicht gesehen',
+    'watchCount:İzlenme Sayısı:Watch Count:Veces Visto:Nombre de vues:Vezes Assistido:Anzahl gesehen',
+    'watchOneMoreTime:Tekrar İzledim (+1):Watched Again (+1):Visto de nuevo (+1):Revu (+1):Assistido novamente (+1):Nochmal gesehen (+1)',
+    'yes:Evet:Yes:Sí:Oui:Sim:Ja',
+    'no:Hayır:No:No:Non:Não:Nein',
+    'rateMovie:Değerlendir:Rate:Valorar:Évaluer:Avaliar:Bewerten',
+    'storyRating:Hikaye:Story:Historia:Histoire:História:Geschichte',
+    'musicRating:Müzik:Music:Música:Musique:Música:Musik',
+    'actingRating:Oyunculuk:Acting:Actuación:Jeu d\'acteur:Atuação:Schauspiel',
+    'cinematographyRating:Sinematografi:Cinematography:Cinematografía:Cinématographie:Cinematografia:Kameraführung',
+    'recommend:Başkalarına önerir misin?:Would you recommend to others?:¿Recomendarías a otros?:Le recommanderiez-vous ?:Você recomendaria a outros?:Würden Sie es weiterempfehlen?',
+    'watchAgain:Tekrar izler misin?:Would you watch again?:¿Volverías a ver?:Regarderiez-vous à nouveau ?:Você assistiria novamente?:Würden Sie es nochmal sehen?',
+    'submitReview:Puanı Kaydet:Submit Review:Enviar Valoración:Soumettre l\'avis:Enviar Avaliação:Bewertung speichern',
+    'overallRating:Genel Puan:Overall Rating:Valoración General:Note globale:Avaliação Geral:Gesamtbewertung',
+    'reviews:Değerlendirmeler:Reviews:Valoraciones:Avis:Avaliações:Bewertungen',
+    'delete:Sil:Delete:Eliminar:Supprimer:Excluir:Löschen',
+    'emptyMovies:Henüz içerik eklenmedi.:No content added yet.:Aún no se ha añadido contenido.:Aucun contenu ajouté.:Nenhum conteúdo adicionado.:Noch kein Inhalt hinzugefügt.',
+    'emptyReviews:Henüz değerlendirme yok.:No reviews yet.:Aún no hay valoraciones.:Aucun avis pour l\'instant.:Nenhuma avaliação ainda.:Noch keine Bewertungen.',
+    'requiredField:Bu alan zorunludur:This field is required:Este campo es obligatorio:Ce champ est obligatoire:Este campo é obrigatório:Dieses Feld ist erforderlich',
+    'search:Cevrimiçi Ara:Search Online:Buscar:Rechercher en ligne:Pesquisar Online:Online suchen',
+    'searchPlaceholder:Film veya dizi adı...:Movie or TV show name...:Nombre...:Nom du film ou série...:Nome do filme ou série...:Film- oder Serienname...',
+    'searchTitle:Dizi Film Ara:Search Movies & TV:Buscar Películas y Series:Rechercher films et séries:Pesquisar Filmes e Séries:Filme & Serien suchen',
+    'searching:Aranıyor...:Searching...:Buscando...:Recherche en cours...:Pesquisando...:Suche läuft...',
+    'noResults:Sonuç bulunamadı.:No results found.:No se encontraron resultados.:Aucun résultat trouvé.:Nenhum resultado encontrado.:Keine Ergebnisse gefunden.',
+    'featured:Öne Çıkanlar:Featured:Destacado:À la une:Destaque:Hervorgehoben',
+    'recommended:Önerilen Dizi ve Filmler:Recommended Series & Movies:Series y Películas Recomendadas:Séries et films recommandés:Séries e Filmes Recomendados:Empfohlene Serien & Filme',
+    'myList:Listem:My List:Mi Lista:Ma liste:Minha Lista:Meine Liste',
+    'homeTab:Anasayfa:Home:Inicio:Accueil:Início:Startseite',
+    'addTab:Ekle:Add:Añadir:Ajouter:Adicionar:Hinzufügen',
+    'addManually:Manuel Ekle:Add Manually:Añadir Manualmente:Ajouter manuellement:Adicionar Manualmente:Manuell hinzufügen',
+    'customAddTitle:Özel İçerik Ekle:Add Custom Content:Añadir Contenido Personalizado:Ajouter contenu personnalisé:Adicionar Conteúdo Personalizado:Eigenen Inhalt hinzufügen',
+    'saveCustom:Kaydet:Save:Guardar:Enregistrer:Salvar:Speichern',
+    'watchedTab:İzlediklerim:Watched:Visto:Regardés:Assistidos:Gesehen',
+    'toWatchTab:İzleyeceklerim:To Watch:Para Ver:À regarder:Para Assistir:Noch zu sehen',
+    'profileTab:Profilim:Profile:Perfil:Profil:Perfil:Profil',
+    'profileDesc:Profil detayları (Yakında):Profile details (Soon):Detalles del perfil (Pronto):Détails du profil (Bientôt):Detalhes do perfil (Em breve):Profildetails (Demnächst)',
+    'details:Detaylar:Details:Detalles:Détails:Detalhes:Details',
+    'suggested:Öneri:Suggested:Sugerido:Suggestion:Sugerido:Empfehlung',
+    'addToList:Listeme Ekle:Add to List:Añadir a lista:Ajouter à la liste:Adicionar à lista:Zur Liste hinzufügen',
+    'action:Aksiyon:Action:Acción:Action:Ação:Action',
+    'adventure:Macera:Adventure:Aventura:Aventure:Aventura:Abenteuer',
+    'animation:Animasyon:Animation:Animación:Animation:Animação:Animation',
+    'biography:Biyografi:Biography:Biografía:Biographie:Biografia:Biografie',
+    'comedy:Komedi:Comedy:Comedia:Comédie:Comédia:Komödie',
+    'crime:Suç:Crime:Crimen:Crime:Crime:Kriminalität',
+    'documentary:Belgesel:Documentary:Documental:Documentaire:Documentário:Dokumentation',
+    'drama:Dram:Drama:Drama:Drame:Drama:Drama',
+    'family:Aile:Family:Familia:Famille:Família:Familie',
+    'fantasy:Fantastik:Fantasy:Fantasía:Fantastique:Fantasia:Fantasy',
+    'history:Tarih:History:Historia:Histoire:História:Geschichte',
+    'horror:Korku:Horror:Terror:Horreur:Terror:Horror',
+    'music:Müzik:Music:Música:Musique:Música:Musik',
+    'mystery:Gizem:Mystery:Misterio:Mystère:Mistério:Mysterium',
+    'romance:Romantik:Romance:Romance:Romance:Romance:Romantik',
+    'sciFi:Bilim Kurgu:Sci-Fi:Ciencia Ficción:Science-Fiction:Ficção Científica:Science-Fiction',
+    'sport:Spor:Sport:Deportes:Sport:Esporte:Sport',
+    'thriller:Gerilim:Thriller:Suspense:Thriller:Suspense:Thriller',
+    'war:Savaş:War:Guerra:Guerre:Guerra:Krieg',
+    'western:Batı:Western:Western:Western:Faroeste:Western',
+    'plotDescription:Film Özeti:Movie Plot:Sinopsis:Synopsis du film:Sinopse do Filme:Filmhandlung',
+    'movieInfoTab:Film/Dizi Bilgisi:Movie/TV Info:Información:Info Film/Série:Info Filme/Série:Film/Serien-Info',
+    'directorLabel:Yönetmen:Director:Director:Réalisateur:Diretor:Regisseur',
+    'writerLabel:Yazar:Writer:Escritor:Scénariste:Roteirista:Drehbuchautor',
+    'actorsLabel:Oyuncular:Actors:Actores:Acteurs:Atores:Schauspieler',
+    'languageLabel:Dil:Language:Idioma:Langue:Idioma:Sprache',
+    'countryLabel:Ülke:Country:País:Pays:País:Land',
+    'boxOfficeLabel:Gişe:Box Office:Recaudación:Box-office:Bilheteria:Einspielergebnis',
+    'ratedLabel:Sınıflandırma:Rated:Clasificación:Classification:Classificação:Einstufung',
+    'releasedLabel:Vizyon:Released:Estrenado:Sortie:Estreia:Erschienen',
+    'commentLabel:Yorumunuz (Opsiyonel):Your Comment (Optional):Tu Comentario (Opcional):Votre commentaire (Optionnel):Seu Comentário (Opcional):Ihr Kommentar (Optional)',
+    'deleteReview:Değerlendirmeyi Sil:Delete Review:Eliminar Valoración:Supprimer l\'avis:Excluir Avaliação:Bewertung löschen',
+    'editReview:Değerlendirmeyi Düzenle:Edit Review:Editar Valoración:Modifier l\'avis:Editar Avaliação:Bewertung bearbeiten',
+    'deleteReviewConfirm:Bu değerlendirmeyi silmek istediğinize emin misiniz?:Are you sure you want to delete this review?:¿Estás seguro de que quieres eliminar esta valoración?:Êtes-vous sûr de vouloir supprimer cet avis ?:Tem certeza que deseja excluir esta avaliação?:Sind Sie sicher, dass Sie diese Bewertung löschen möchten?',
+    'edit:Düzenle:Edit:Editar:Modifier:Editar:Bearbeiten',
+    'ratingHigher:Bu yapıma IMDb\'den {diff} puan daha yüksek verdiniz!:You rated this {diff} points HIGHER than IMDb!:¡Puntuaste esto {diff} puntos MÁS que en IMDb!:Vous avez noté ceci {diff} points PLUS qu\'IMDb !:Você avaliou isso {diff} pontos ACIMA do IMDb!:Sie haben das {diff} Punkte HÖHER als IMDb bewertet!',
+    'ratingLower:Bu yapıma IMDb\'den {diff} puan daha düşük verdiniz.:You rated this {diff} points LOWER than IMDb.:Puntuaste esto {diff} puntos MENOS que en IMDb.:Vous avez noté ceci {diff} points MOINS qu\'IMDb.:Você avaliou isso {diff} pontos ABAIXO do IMDb.:Sie haben das {diff} Punkte NIEDRIGER als IMDb bewertet.',
+    'ratingMatch:Puanınız IMDb ile tam olarak eşleşiyor!:Your rating matches IMDb exactly!:¡Tu puntuación coincide exactamente con IMDb!:Votre note correspond exactement à IMDb !:Sua avaliação corresponde exatamente ao IMDb!:Ihre Bewertung stimmt genau mit IMDb überein!',
   ];
 
   static String tr(String key) {
@@ -189,6 +204,15 @@ class Translations {
         }
         if (_currentLanguage == Language.es && parts.length > 3) {
           return parts[3];
+        }
+        if (_currentLanguage == Language.fr && parts.length > 4) {
+          return parts[4];
+        }
+        if (_currentLanguage == Language.pt && parts.length > 5) {
+          return parts[5];
+        }
+        if (_currentLanguage == Language.de && parts.length > 6) {
+          return parts[6];
         }
         return parts.length > 2 ? parts[2] : key;
       }

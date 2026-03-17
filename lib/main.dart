@@ -92,6 +92,9 @@ class FilmListApp extends StatelessWidget {
         Locale('en'),
         Locale('tr'),
         Locale('es'),
+        Locale('fr'),
+        Locale('pt'),
+        Locale('de'),
       ],
       localeResolutionCallback: (deviceLocale, supportedLocales) {
         Translations.applyDeviceLocale(deviceLocale);

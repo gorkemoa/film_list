@@ -55,6 +55,9 @@ class ProfileView extends StatelessWidget {
             _buildLanguageOption(context, viewModel, Language.tr, 'Türkçe'),
             _buildLanguageOption(context, viewModel, Language.en, 'English'),
             _buildLanguageOption(context, viewModel, Language.es, 'Español'),
+            _buildLanguageOption(context, viewModel, Language.fr, 'Français'),
+            _buildLanguageOption(context, viewModel, Language.pt, 'Português'),
+            _buildLanguageOption(context, viewModel, Language.de, 'Deutsch'),
           ],
         ),
       ),
@@ -88,6 +91,12 @@ class ProfileView extends StatelessWidget {
         return 'English';
       case Language.es:
         return 'Español';
+      case Language.fr:
+        return 'Français';
+      case Language.pt:
+        return 'Português';
+      case Language.de:
+        return 'Deutsch';
     }
   }
 

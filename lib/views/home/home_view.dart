@@ -320,27 +320,14 @@ class _HomeViewState extends State<HomeView> {
         notchMargin: 8.0,
         color: AppTheme.surfaceColor,
         padding: EdgeInsets.zero,
-        height: SizeConfig.relativeSize(70) + MediaQuery.of(context).padding.bottom,
-        child: SafeArea(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Left Side
-              Row(
-                children: [
-                  _buildNavItem(0, Icons.home, 'homeTab'),
-                  _buildNavItem(1, Icons.visibility, 'watchedTab'),
-                ],
-              ),
-              // Right Side
-              Row(
-                children: [
-                  _buildNavItem(3, Icons.visibility_off, 'toWatchTab'),
-                  _buildNavItem(4, Icons.person, 'profileTab'),
-                ],
-              ),
-            ],
-          ),
+        child: Row(
+          children: [
+            _buildNavItem(0, Icons.home_rounded, 'homeTab'),
+            _buildNavItem(1, Icons.visibility_rounded, 'watchedTab'),
+            const SizedBox(width: 40), // FAB alanı
+            _buildNavItem(3, Icons.visibility_off_rounded, 'toWatchTab'),
+            _buildNavItem(4, Icons.person_rounded, 'profileTab'),
+          ],
         ),
       ),
     );
@@ -348,28 +335,47 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _buildNavItem(int index, IconData icon, String labelKey) {
     final isSelected = _currentIndex == index;
-    return InkWell(
-      onTap: () => setState(() => _currentIndex = index),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: SizeTokens.paddingMedium),
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _currentIndex = index),
+        behavior: HitTestBehavior.opaque,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? AppTheme.primaryColor
-                  : AppTheme.textSecondaryColor,
-              size: SizeTokens.iconMedium,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppTheme.primaryColor.withValues(alpha: 0.15)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected
+                    ? AppTheme.primaryColor
+                    : AppTheme.textSecondaryColor,
+                size: SizeTokens.iconMedium,
+              ),
             ),
-            Text(
-              Translations.tr(labelKey),
+            const SizedBox(height: 3),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 color: isSelected
                     ? AppTheme.primaryColor
                     : AppTheme.textSecondaryColor,
                 fontSize: SizeTokens.textSmall,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontWeight:
+                    isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+              child: Text(
+                Translations.tr(labelKey),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
