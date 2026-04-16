@@ -79,16 +79,7 @@ void main() async {
             movieCacheService: movieCacheService,
           ),
         ),
-        ChangeNotifierProvider(
-          create: (_) => DiscoveryViewModel(
-            movieCacheService: movieCacheService,
-            discoveryService: DiscoveryService(
-              omdbSearchService: omdbSearchService,
-              omdbDetailService: omdbDetailService,
-              movieCacheService: movieCacheService,
-            ),
-          ),
-        ),
+        ChangeNotifierProvider(create: (_) => DiscoveryViewModel()),
         ChangeNotifierProvider(create: (_) => StatsViewModel()),
       ],
       child: const FilmListApp(),
