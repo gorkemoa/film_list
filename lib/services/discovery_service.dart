@@ -1,203 +1,158 @@
-import 'dart:math';
+import '../models/discovery_preference.dart';
 import '../models/movie.dart';
+import '../core/utils/logger.dart';
+import 'grok_ai_service.dart';
 import 'omdb_detail_service.dart';
 import 'omdb_search_service.dart';
-import 'movie_cache_service.dart';
-import '../core/utils/logger.dart';
 
+/// Discovery service for AI-powered movie recommendations.
+/// Flow:
+///   1. Grok AI generates candidate movie titles.
+///   2. Each candidate is searched on OMDb by title.
+///   3. Only OMDb-confirmed movies with valid data are returned.
 class DiscoveryService {
+  final GrokAiService _grokAiService;
   final OmdbDetailService _omdbDetailService;
   final OmdbSearchService _omdbSearchService;
-  final MovieCacheService _movieCacheService;
 
   DiscoveryService({
+    GrokAiService? grokAiService,
     OmdbDetailService? omdbDetailService,
     OmdbSearchService? omdbSearchService,
-    MovieCacheService? movieCacheService,
-  }) : _omdbDetailService = omdbDetailService ?? OmdbDetailService(),
-       _omdbSearchService = omdbSearchService ?? OmdbSearchService(),
-       _movieCacheService = movieCacheService ?? MovieCacheService();
+  })  : _grokAiService = grokAiService ?? GrokAiService(),
+        _omdbDetailService = omdbDetailService ?? OmdbDetailService(),
+        _omdbSearchService = omdbSearchService ?? OmdbSearchService();
 
-  // Keywords for broad searches as fallback
-  // Removed 'the' and 'a' as they often cause "Too many results" error
-  final List<String> _keywords = [
-    'dark',
-    'man',
-    'love',
-    'star',
-    'world',
-    'life',
-    'war',
-    'space',
-    'hero',
-    'time',
-    'blue',
-    'night',
-    'dream',
-    'force',
-    'quest',
-    'king',
-    'dragon',
-    'fire',
-    'black',
-    'white',
-    'gold',
-    'dead',
-    'lost',
-    'city',
-    'road',
-  ];
+  /// Suggests movies based on a quiz-style [DiscoveryPreference].
+  Future<List<DiscoveryResult>> suggestFromPreference(
+    DiscoveryPreference pref,
+  ) async {
+    Logger.info('DiscoveryService: suggestFromPreference called');
+    try {
+      final candidates = await _grokAiService.suggestFromPreference(pref);
+      if (candidates.isEmpty) {
+        Logger.info('DiscoveryService: Grok returned no candidates');
+        return [];
+      }
+      return _validateAndBuildResults(candidates, _grokAiCandidates: candidates);
+    } catch (e, st) {
+      Logger.error('DiscoveryService: suggestFromPreference failed', e, st);
+      return [];
+    }
+  }
 
-  // Simple in-memory cache to avoid repeated heavy API calls in one session
-  List<Movie>? _cachedSuggestions;
-  DateTime? _lastFetch;
-  static const _cacheDuration = Duration(hours: 1);
+  /// Suggests movies based on a quick category key (e.g. 'action', 'highRated').
+  Future<List<DiscoveryResult>> suggestFromCategory(String categoryKey) async {
+    Logger.info('DiscoveryService: suggestFromCategory called for $categoryKey');
+    try {
+      final candidates = await _grokAiService.suggestFromCategory(categoryKey);
+      if (candidates.isEmpty) {
+        Logger.info('DiscoveryService: Grok returned no candidates');
+        return [];
+      }
+      return _validateAndBuildResults(candidates, _grokAiCandidates: candidates);
+    } catch (e, st) {
+      Logger.error('DiscoveryService: suggestFromCategory failed', e, st);
+      return [];
+    }
+  }
 
-  /// Returns a randomized list of high-rated movies fetched from the API.
-  /// Strategy:
-  /// 1. Analyze user's current list for genres/keywords.
-  /// 2. If empty, use generic keywords.
-  /// 3. Fetch details -> Filter by IMDb rating >= 7.0 for better availability.
-  /// 4. Exclude movies already in user's list.
-  Future<List<Movie>> getSuggestions() async {
-    // Return cache if valid
-    if (_cachedSuggestions != null &&
-        _lastFetch != null &&
-        DateTime.now().difference(_lastFetch!) < _cacheDuration) {
-      Logger.info('Returning cached suggestions');
-      return _cachedSuggestions!;
+  /// Validates Grok candidates against OMDb and builds [DiscoveryResult] list.
+  Future<List<DiscoveryResult>> _validateAndBuildResults(
+    List<GrokMovieCandidate> candidates, {
+    required List<GrokMovieCandidate> _grokAiCandidates,
+  }) async {
+    final results = <DiscoveryResult>[];
+
+    // Build a reason lookup by title (case-insensitive)
+    final reasonMap = <String, String>{};
+    for (final c in _grokAiCandidates) {
+      reasonMap[c.title.toLowerCase()] = c.reason;
     }
 
-    try {
-      final userMovies = await _movieCacheService.getAllMovies();
-      final userImdbIds = userMovies
-          .map((m) => m.imdbId)
-          .whereType<String>()
-          .toSet();
+    // Search + fetch detail in controlled batches to avoid rate limits
+    final futures = candidates.take(10).map((c) async {
+      try {
+        // Step 1: Search by title on OMDb
+        final searchResults = await _omdbSearchService.searchMovies(c.title);
+        if (searchResults.isEmpty) {
+          Logger.info('DiscoveryService: Not found on OMDb: ${c.title}');
+          return null;
+        }
 
-      final random = Random();
-      String keyword;
-      int page =
-          random.nextInt(5) + 1; // Slightly wider page range to get variety
-
-      if (userMovies.isEmpty) {
-        keyword = _keywords[random.nextInt(_keywords.length)];
-        Logger.info(
-          'User list empty, searching discovery for generic: $keyword (page $page)',
-        );
-      } else {
-        // Try to find a keyword from genres or titles
-        final movieToAnalyze = userMovies[random.nextInt(userMovies.length)];
-        final genres = movieToAnalyze.genre
-            .split(',')
-            .map((e) => e.trim())
-            .where((g) => g.isNotEmpty && g != 'N/A')
-            .toList();
-
-        if (genres.isNotEmpty && random.nextDouble() < 0.7) {
-          keyword = genres[random.nextInt(genres.length)];
-          Logger.info(
-            'Searching discovery based on user genre: $keyword (page $page)',
-          );
-        } else {
-          // Fallback to title keyword or generic
-          final titleWords = movieToAnalyze.title
-              .split(' ')
-              .where((w) => w.length > 3)
-              .toList();
-          if (titleWords.isNotEmpty && random.nextDouble() < 0.5) {
-            keyword = titleWords[random.nextInt(titleWords.length)];
-            Logger.info(
-              'Searching discovery based on user title: $keyword (page $page)',
-            );
-          } else {
-            keyword = _keywords[random.nextInt(_keywords.length)];
-            Logger.info('Fallback to generic discovery: $keyword (page $page)');
+        // Step 2: Find best match (prefer exact title match)
+        Movie? bestMatch;
+        for (final m in searchResults) {
+          if (m.title.toLowerCase() == c.title.toLowerCase()) {
+            bestMatch = m;
+            break;
           }
         }
-      }
+        bestMatch ??= searchResults.first;
 
-      List<Movie> searchResults = await _omdbSearchService.searchMovies(
-        keyword,
-        page: page,
-      );
-
-      // If search failed or was too broad, or returned few results,
-      // try with guaranteed generic keywords and page 1
-      if (searchResults.length < 3) {
-        Logger.info(
-          'Search found insufficient results (${searchResults.length}), trying guaranteed generic fallback',
-        );
-        final fallbackKeyword = _keywords[random.nextInt(_keywords.length)];
-        final fallbackResults = await _omdbSearchService.searchMovies(
-          fallbackKeyword,
-          page: 1,
-        );
-        if (fallbackResults.isNotEmpty) {
-          searchResults = [...searchResults, ...fallbackResults];
+        // Step 3: Fetch full detail
+        final detail = await _omdbDetailService
+            .getMovieDetail(bestMatch.imdbId ?? '');
+        if (detail == null) {
+          Logger.info(
+            'DiscoveryService: No detail for imdbId: ${bestMatch.imdbId}',
+          );
+          return null;
         }
-      }
 
-      return await _processSearchResults(searchResults, userImdbIds);
-    } catch (e, st) {
-      Logger.error('Failed to get random suggestions', e, st);
-      return _cachedSuggestions ?? [];
+        // Step 4: Validate: must have poster and reasonable rating
+        if (detail.posterUrl == null || detail.posterUrl == 'N/A') {
+          Logger.info('DiscoveryService: No poster for: ${detail.title}');
+          return null;
+        }
+
+        final reason =
+            reasonMap[c.title.toLowerCase()] ?? reasonMap[detail.title.toLowerCase()] ?? c.reason;
+
+        return DiscoveryResult(
+          imdbId: detail.imdbId ?? detail.id,
+          title: detail.title,
+          year: detail.year,
+          genre: detail.genre,
+          posterUrl: detail.posterUrl,
+          imdbRating: detail.imdbRating,
+          runtime: detail.runtime,
+          reason: reason,
+        );
+      } catch (e, st) {
+        Logger.error(
+          'DiscoveryService: Error validating candidate ${c.title}',
+          e,
+          st,
+        );
+        return null;
+      }
+    }).toList();
+
+    final resolved = await Future.wait(futures);
+    for (final r in resolved) {
+      if (r != null) results.add(r);
     }
+
+    Logger.info(
+      'DiscoveryService: ${results.length} validated results from ${candidates.length} candidates',
+    );
+    return results;
   }
 
-  /// Helper to process search results: filter, fetch details, and filter by rating.
-  Future<List<Movie>> _processSearchResults(
-    List<Movie> searchResults,
-    Set<String> userImdbIds,
-  ) async {
-    if (searchResults.isEmpty) return [];
-
-    // Filter out movies already in user list before fetching details
-    final filteredSearch = searchResults
-        .where((m) => !userImdbIds.contains(m.imdbId))
-        .toList();
-
-    if (filteredSearch.isEmpty) return [];
-
-    // Limit search results to avoid too many API calls (max 10 details for better hit rate)
-    final itemsToCheck = filteredSearch.take(10).toList();
-
-    // Fetch details in parallel
-    final detailFutures = itemsToCheck.map(
-      (m) => _omdbDetailService.getMovieDetail(m.imdbId ?? ''),
+  /// Converts a [DiscoveryResult] to a [Movie] for navigation to detail view.
+  Movie discoveryResultToMovie(DiscoveryResult result) {
+    return Movie(
+      id: 'discovery_${result.imdbId}',
+      imdbId: result.imdbId,
+      title: result.title,
+      year: result.year,
+      genre: result.genre,
+      posterUrl: result.posterUrl,
+      imdbRating: result.imdbRating,
+      runtime: result.runtime,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
-    final details = await Future.wait(detailFutures);
-
-    // Filter by rating >= 7.0 (more inclusive for consistent suggestions) and valid poster
-    final highRated = details
-        .whereType<Movie>()
-        .where((m) {
-          final rating = double.tryParse(m.imdbRating ?? '0') ?? 0.0;
-          return rating >= 7.0 &&
-              m.posterUrl != null &&
-              m.posterUrl != 'N/A' &&
-              !userImdbIds.contains(m.imdbId);
-        })
-        .map((m) => m.copyWith(id: 'suggested_${m.imdbId}'))
-        .toList();
-
-    if (highRated.isNotEmpty) {
-      _cachedSuggestions = highRated;
-      _lastFetch = DateTime.now();
-    } else if (_cachedSuggestions == null || _cachedSuggestions!.isEmpty) {
-      // If we found NOTHING and have nothing cached, try one more desperate attempt
-      // with a very popular movie to ensure the UI isn't empty
-      Logger.info('No high rated movies found, attempting desperate fallback');
-      final topMovie = await _omdbDetailService.getMovieDetail('tt0468569'); // The Dark Knight
-      if (topMovie != null) {
-        final suggestion = topMovie.copyWith(id: 'suggested_${topMovie.imdbId}');
-        _cachedSuggestions = [suggestion];
-        _lastFetch = DateTime.now();
-        return [suggestion];
-      }
-    }
-
-    return highRated.isEmpty ? (_cachedSuggestions ?? []) : highRated;
   }
 }
-
