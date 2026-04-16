@@ -102,112 +102,146 @@ class ProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ProfileViewModel>(
-      builder: (context, viewModel, child) {
-        return SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(SizeTokens.paddingLarge),
-            child: Column(
-              children: [
-                SizedBox(height: SizeTokens.paddingLarge),
-                Icon(
-                  Icons.account_circle,
-                  size: SizeConfig.relativeSize(100),
-                  color: AppTheme.textSecondaryColor,
-                ),
-                SizedBox(height: SizeTokens.paddingLarge),
-                Text(
-                  Translations.tr('profileTab'),
-                  style: TextStyle(
-                    fontSize: SizeTokens.textLarge * 1.5,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: SizeTokens.paddingLarge * 2),
-
-                // Settings Card
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
-                    borderRadius: SizeTokens.circularRadiusMedium,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      // Language Selection
-                      ListTile(
-                        leading: Icon(
-                          Icons.language,
-                          color: AppTheme.primaryColor,
-                        ),
-                        title: Text(Translations.tr('language')),
-                        subtitle: Text(
-                          _getLanguageName(viewModel.currentLanguage),
-                        ),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => _showLanguageDialog(context, viewModel),
-                      ),
-                      Divider(height: 1, indent: SizeTokens.paddingLarge),
-                      // Rate App
-                      ListTile(
-                        leading: Icon(
-                          Icons.star_rate,
-                          color: AppTheme.primaryColor,
-                        ),
-                        title: Text(Translations.tr('rateApp')),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () async {
-                          final inAppReview = InAppReview.instance;
-                          // Gerçek Mod: Doğrudan sistemin native puanlama diyaloğunu açar
-                          if (await inAppReview.isAvailable()) {
-                            await inAppReview.requestReview();
-                          } else {
-                            // Desteklenmeyen durumlarda mağaza sayfasını açar
-                            await inAppReview.openStoreListing();
-                          }
-                        },
-                      ),
-                      Divider(height: 1, indent: SizeTokens.paddingLarge),
-                      // Clear Data
-                      ListTile(
-                        leading: Icon(
-                          Icons.delete_forever,
-                          color: AppTheme.errorColor,
-                        ),
-                        title: Text(
-                          Translations.tr('clearData'),
-                          style: TextStyle(color: AppTheme.errorColor),
-                        ),
-                        onTap: () =>
-                            _showClearDataConfirmation(context, viewModel),
-                      ),
-                    ],
-                  ),
-                ),
-
-                if (viewModel.isLoading) ...[
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: AppBar(
+        title: Text(Translations.tr('settings')),
+      ),
+      body: Consumer<ProfileViewModel>(
+        builder: (context, viewModel, child) {
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(SizeTokens.paddingLarge),
+              child: Column(
+                children: [
                   SizedBox(height: SizeTokens.paddingLarge),
-                  const CircularProgressIndicator(),
-                ],
-
-                if (viewModel.errorMessage != null) ...[
-                  SizedBox(height: SizeTokens.paddingMedium),
-                  Text(
-                    viewModel.errorMessage!,
-                    style: TextStyle(color: AppTheme.errorColor),
+                  Icon(
+                    Icons.account_circle,
+                    size: SizeConfig.relativeSize(100),
+                    color: AppTheme.textSecondaryColor,
                   ),
+                  SizedBox(height: SizeTokens.paddingLarge),
+                  Text(
+                    Translations.tr('profileTab'),
+                    style: TextStyle(
+                      fontSize: SizeTokens.textLarge * 1.5,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: SizeTokens.paddingLarge * 2),
+
+                  // Settings Card
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceColor,
+                      borderRadius: SizeTokens.circularRadiusMedium,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Column(
+                        children: [
+                          // Language Selection
+                          ListTile(
+                            leading: Icon(
+                              Icons.language,
+                              color: AppTheme.primaryColor,
+                            ),
+                            title: Text(
+                              Translations.tr('language'),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            subtitle: Text(
+                              _getLanguageName(viewModel.currentLanguage),
+                              style: const TextStyle(
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                            ),
+                            trailing: const Icon(
+                              Icons.chevron_right,
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                            onTap: () =>
+                                _showLanguageDialog(context, viewModel),
+                          ),
+                          Divider(
+                            height: 1,
+                            indent: SizeTokens.paddingLarge,
+                            color: AppTheme.surfaceLightColor,
+                          ),
+                          // Rate App
+                          ListTile(
+                            leading: Icon(
+                              Icons.star_rate,
+                              color: AppTheme.primaryColor,
+                            ),
+                            title: Text(
+                              Translations.tr('rateApp'),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            trailing: const Icon(
+                              Icons.chevron_right,
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                            onTap: () async {
+                              final inAppReview = InAppReview.instance;
+                              // Gerçek Mod: Doğrudan sistemin native puanlama diyaloğunu açar
+                              if (await inAppReview.isAvailable()) {
+                                await inAppReview.requestReview();
+                              } else {
+                                // Desteklenmeyen durumlarda mağaza sayfasını açar
+                                await inAppReview.openStoreListing();
+                              }
+                            },
+                          ),
+                          Divider(
+                            height: 1,
+                            indent: SizeTokens.paddingLarge,
+                            color: AppTheme.surfaceLightColor,
+                          ),
+                          // Clear Data
+                          ListTile(
+                            leading: Icon(
+                              Icons.delete_forever,
+                              color: AppTheme.errorColor,
+                            ),
+                            title: Text(
+                              Translations.tr('clearData'),
+                              style: TextStyle(color: AppTheme.errorColor),
+                            ),
+                            onTap: () =>
+                                _showClearDataConfirmation(context, viewModel),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  if (viewModel.isLoading) ...[
+                    SizedBox(height: SizeTokens.paddingLarge),
+                    const CircularProgressIndicator(),
+                  ],
+
+                  if (viewModel.errorMessage != null) ...[
+                    SizedBox(height: SizeTokens.paddingMedium),
+                    Text(
+                      viewModel.errorMessage!,
+                      style: TextStyle(color: AppTheme.errorColor),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

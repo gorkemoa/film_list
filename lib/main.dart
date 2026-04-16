@@ -1,3 +1,4 @@
+import 'package:film_list/services/discovery_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -17,6 +18,8 @@ import 'viewmodels/add_movie_view_model.dart';
 import 'viewmodels/movie_detail_view_model.dart';
 import 'viewmodels/profile_view_model.dart';
 import 'viewmodels/custom_list_view_model.dart';
+import 'viewmodels/discovery_view_model.dart';
+import 'viewmodels/stats_view_model.dart';
 import 'services/translation_service.dart';
 import 'views/home/home_view.dart';
 import 'views/widgets/upgrade_wrapper.dart';
@@ -76,6 +79,17 @@ void main() async {
             movieCacheService: movieCacheService,
           ),
         ),
+        ChangeNotifierProvider(
+          create: (_) => DiscoveryViewModel(
+            movieCacheService: movieCacheService,
+            discoveryService: DiscoveryService(
+              omdbSearchService: omdbSearchService,
+              omdbDetailService: omdbDetailService,
+              movieCacheService: movieCacheService,
+            ),
+          ),
+        ),
+        ChangeNotifierProvider(create: (_) => StatsViewModel()),
       ],
       child: const FilmListApp(),
     ),

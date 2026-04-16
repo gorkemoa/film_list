@@ -1,4 +1,8 @@
 import 'dart:io';
+import 'package:film_list/app/app_theme.dart';
+import 'package:film_list/views/home/widgets/add_poster_widget.dart';
+import 'package:film_list/views/home/widgets/slider_widget.dart';
+import 'package:film_list/views/widgets/custom_poster_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../app/translations.dart';
@@ -8,13 +12,11 @@ import '../../models/movie.dart';
 import '../../viewmodels/home_view_model.dart';
 import '../add_movie/add_movie_view.dart';
 import '../movie_detail/movie_detail_view.dart';
-import '../profile/profile_view.dart';
-import '../widgets/custom_poster_widget.dart';
-import '../../app/app_theme.dart';
-import 'widgets/slider_widget.dart';
-import 'widgets/add_poster_widget.dart';
 import 'widgets/watch_status_badge_widget.dart';
 import '../lists/lists_view.dart';
+import '../discovery/discovery_view.dart';
+import '../stats/stats_view.dart';
+import '../profile/profile_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -104,11 +106,14 @@ class _HomeViewState extends State<HomeView> {
                                       fit: BoxFit.cover,
                                       cacheWidth: 300,
                                       cacheHeight: 444,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          CustomPosterWidget(
-                                            movie: movie,
-                                            width: SizeConfig.relativeSize(130),
-                                          ),
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              CustomPosterWidget(
+                                                movie: movie,
+                                                width: SizeConfig.relativeSize(
+                                                  130,
+                                                ),
+                                              ),
                                     )
                                   : (movie.posterUrl != null &&
                                         movie.posterUrl != 'N/A')
@@ -118,11 +123,14 @@ class _HomeViewState extends State<HomeView> {
                                       fit: BoxFit.cover,
                                       cacheWidth: 300,
                                       cacheHeight: 444,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          CustomPosterWidget(
-                                            movie: movie,
-                                            width: SizeConfig.relativeSize(130),
-                                          ),
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              CustomPosterWidget(
+                                                movie: movie,
+                                                width: SizeConfig.relativeSize(
+                                                  130,
+                                                ),
+                                              ),
                                     )
                                   : CustomPosterWidget(
                                       movie: movie,
@@ -132,7 +140,9 @@ class _HomeViewState extends State<HomeView> {
                             Positioned(
                               top: 6,
                               left: 6,
-                              child: WatchStatusBadge(status: movie.watchStatus),
+                              child: WatchStatusBadge(
+                                status: movie.watchStatus,
+                              ),
                             ),
                           ],
                         ),
@@ -292,21 +302,31 @@ class _HomeViewState extends State<HomeView> {
     SizeConfig.init(context);
 
     String? appBarTitle;
-    if (_currentIndex == 1) appBarTitle = Translations.tr('watchedTab');
+    if (_currentIndex == 1) appBarTitle = Translations.tr('discoveryTab');
     if (_currentIndex == 2) appBarTitle = Translations.tr('addTab');
     if (_currentIndex == 3) appBarTitle = Translations.tr('listsTab');
-    if (_currentIndex == 4) appBarTitle = Translations.tr('profileTab');
+    if (_currentIndex == 4) appBarTitle = Translations.tr('collectionStats');
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: appBarTitle != null
-          ? AppBar(
-              title: Text(
-                appBarTitle,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            )
-          : null,
+      appBar: AppBar(
+        title: Text(
+          appBarTitle ?? 'FilmList',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileView()),
+              );
+            },
+            icon: const Icon(Icons.settings_outlined),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: Consumer<HomeViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isLoading) {
@@ -326,10 +346,10 @@ class _HomeViewState extends State<HomeView> {
             index: _currentIndex,
             children: [
               _buildHomeTab(context, viewModel),
-              _buildMovieListTab(context, viewModel, viewModel.watchedMovies),
+              const DiscoveryView(),
               const AddMovieView(),
               const ListsView(),
-              const ProfileView(),
+              const StatsView(),
             ],
           );
         },
@@ -351,10 +371,10 @@ class _HomeViewState extends State<HomeView> {
         child: Row(
           children: [
             _buildNavItem(0, Icons.home_rounded, 'homeTab'),
-            _buildNavItem(1, Icons.visibility_rounded, 'watchedTab'),
+            _buildNavItem(1, Icons.explore_rounded, 'discoveryTab'),
             const SizedBox(width: 40),
             _buildNavItem(3, Icons.playlist_play_rounded, 'listsTab'),
-            _buildNavItem(4, Icons.person_rounded, 'profileTab'),
+            _buildNavItem(4, Icons.insights_rounded, 'statsTab'),
           ],
         ),
       ),
@@ -397,8 +417,7 @@ class _HomeViewState extends State<HomeView> {
                     ? AppTheme.primaryColor
                     : AppTheme.textSecondaryColor,
                 fontSize: SizeTokens.textSmall,
-                fontWeight:
-                    isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
               child: Text(
                 Translations.tr(labelKey),
