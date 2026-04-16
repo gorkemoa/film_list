@@ -30,9 +30,7 @@ class SelectableChip extends StatelessWidget {
           vertical: SizeTokens.paddingSmall,
         ),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.primaryColor
-              : AppTheme.surfaceColor,
+          color: isSelected ? AppTheme.primaryColor : AppTheme.surfaceColor,
           borderRadius: BorderRadius.circular(SizeConfig.relativeSize(20)),
           border: Border.all(
             color: isSelected
@@ -48,9 +46,7 @@ class SelectableChip extends StatelessWidget {
               Icon(
                 icon,
                 size: SizeTokens.iconSmall,
-                color: isSelected
-                    ? Colors.white
-                    : AppTheme.textSecondaryColor,
+                color: isSelected ? Colors.white : AppTheme.textSecondaryColor,
               ),
               SizedBox(width: SizeConfig.relativeSize(6)),
             ],
@@ -60,9 +56,8 @@ class SelectableChip extends StatelessWidget {
                 fontSize: SizeTokens.textSmall,
                 fontWeight:
                     isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: isSelected
-                    ? Colors.white
-                    : AppTheme.textSecondaryColor,
+                color:
+                    isSelected ? Colors.white : AppTheme.textSecondaryColor,
               ),
             ),
           ],
@@ -72,10 +67,28 @@ class SelectableChip extends StatelessWidget {
   }
 }
 
+// ── Data model ────────────────────────────────────────────────────────────────
+/// Represents a single option in a quiz row.
+class QuizOption {
+  final String label;
+  final String value;
+  final IconData? icon;
+
+  const QuizOption(this.label, this.value, [this.icon]);
+}
+
+/// Factory helper — converts a list of (label, value, icon?) records to QuizOptions.
+List<QuizOption> buildQuizOptions(
+  List<(String, String, IconData?)> data,
+) {
+  return data.map((e) => QuizOption(e.$1, e.$2, e.$3)).toList();
+}
+
+// ── Compound widget ───────────────────────────────────────────────────────────
 /// A labelled row containing a horizontal scroll of [SelectableChip]s.
 class QuizOptionRow extends StatelessWidget {
   final String label;
-  final List<_QuizOption> options;
+  final List<QuizOption> options;
   final String? selectedValue;
   final void Function(String value) onSelected;
 
@@ -108,9 +121,7 @@ class QuizOptionRow extends StatelessWidget {
             children: options
                 .map(
                   (opt) => Padding(
-                    padding: EdgeInsets.only(
-                      right: SizeConfig.relativeSize(8),
-                    ),
+                    padding: EdgeInsets.only(right: SizeConfig.relativeSize(8)),
                     child: SelectableChip(
                       label: opt.label,
                       isSelected: selectedValue == opt.value,
@@ -126,19 +137,4 @@ class QuizOptionRow extends StatelessWidget {
       ],
     );
   }
-}
-
-class _QuizOption {
-  final String label;
-  final String value;
-  final IconData? icon;
-
-  const _QuizOption(this.label, this.value, [this.icon]);
-}
-
-// Convenience builder
-List<_QuizOption> buildQuizOptions(
-  List<(String label, String value, IconData? icon)> data,
-) {
-  return data.map((e) => _QuizOption(e.$1, e.$2, e.$3)).toList();
 }

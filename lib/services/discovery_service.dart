@@ -1,9 +1,11 @@
+import 'dart:math';
 import '../models/discovery_preference.dart';
 import '../models/movie.dart';
 import '../core/utils/logger.dart';
 import 'grok_ai_service.dart';
 import 'omdb_detail_service.dart';
 import 'omdb_search_service.dart';
+import 'movie_cache_service.dart';
 
 /// Discovery service for AI-powered movie recommendations.
 /// Flow:
@@ -14,15 +16,92 @@ class DiscoveryService {
   final GrokAiService _grokAiService;
   final OmdbDetailService _omdbDetailService;
   final OmdbSearchService _omdbSearchService;
+  final MovieCacheService _movieCacheService;
+
+  // Generic keywords used by getSuggestions() (HomeViewModel compat)
+  static const List<String> _keywords = [
+    'dark', 'man', 'love', 'star', 'world', 'life', 'war', 'space',
+    'hero', 'time', 'blue', 'night', 'dream', 'force', 'quest',
+    'king', 'dragon', 'fire', 'black', 'white', 'gold', 'dead',
+    'lost', 'city', 'road',
+  ];
+
+  List<Movie>? _cachedSuggestions;
+  DateTime? _lastFetch;
+  static const _cacheDuration = Duration(hours: 1);
 
   DiscoveryService({
     GrokAiService? grokAiService,
     OmdbDetailService? omdbDetailService,
     OmdbSearchService? omdbSearchService,
+    MovieCacheService? movieCacheService,
   })  : _grokAiService = grokAiService ?? GrokAiService(),
         _omdbDetailService = omdbDetailService ?? OmdbDetailService(),
-        _omdbSearchService = omdbSearchService ?? OmdbSearchService();
+        _omdbSearchService = omdbSearchService ?? OmdbSearchService(),
+        _movieCacheService = movieCacheService ?? MovieCacheService();
 
+  // ── HomeViewModel compatibility ─────────────────────────────────────────
+  /// Returns a randomised list of high-rated movies for the Home screen slider.
+  /// Uses OMDb keyword search — no Grok AI call needed here.
+  Future<List<Movie>> getSuggestions() async {
+    if (_cachedSuggestions != null &&
+        _lastFetch != null &&
+        DateTime.now().difference(_lastFetch!) < _cacheDuration) {
+      Logger.info('DiscoveryService: Returning cached home suggestions');
+      return _cachedSuggestions!;
+    }
+
+    try {
+      final userMovies = await _movieCacheService.getAllMovies();
+      final userImdbIds =
+          userMovies.map((m) => m.imdbId).whereType<String>().toSet();
+
+      final random = Random();
+      final keyword = _keywords[random.nextInt(_keywords.length)];
+      final page = random.nextInt(5) + 1;
+
+      Logger.info('DiscoveryService: getSuggestions keyword=$keyword page=$page');
+
+      final searchResults =
+          await _omdbSearchService.searchMovies(keyword, page: page);
+
+      if (searchResults.isEmpty) return _cachedSuggestions ?? [];
+
+      final itemsToCheck = searchResults
+          .where((m) => !userImdbIds.contains(m.imdbId))
+          .take(10)
+          .toList();
+
+      final detailFutures = itemsToCheck
+          .map((m) => _omdbDetailService.getMovieDetail(m.imdbId ?? ''));
+      final details = await Future.wait(detailFutures);
+
+      final highRated = details
+          .whereType<Movie>()
+          .where((m) {
+            final rating = double.tryParse(m.imdbRating ?? '0') ?? 0.0;
+            return rating >= 7.0 &&
+                m.posterUrl != null &&
+                m.posterUrl != 'N/A' &&
+                !userImdbIds.contains(m.imdbId);
+          })
+          .map((m) => m.copyWith(id: 'suggested_\${m.imdbId}'))
+          .toList();
+
+      if (highRated.isNotEmpty) {
+        _cachedSuggestions = highRated;
+        _lastFetch = DateTime.now();
+        return highRated;
+      }
+
+      return _cachedSuggestions ?? [];
+    } catch (e, st) {
+      Logger.error('DiscoveryService: getSuggestions failed', e, st);
+      return _cachedSuggestions ?? [];
+    }
+  }
+
+  // ── AI-powered discovery ─────────────────────────────────────────────────
   /// Suggests movies based on a quiz-style [DiscoveryPreference].
   Future<List<DiscoveryResult>> suggestFromPreference(
     DiscoveryPreference pref,
@@ -34,7 +113,7 @@ class DiscoveryService {
         Logger.info('DiscoveryService: Grok returned no candidates');
         return [];
       }
-      return _validateAndBuildResults(candidates, _grokAiCandidates: candidates);
+      return _validateAndBuildResults(candidates);
     } catch (e, st) {
       Logger.error('DiscoveryService: suggestFromPreference failed', e, st);
       return [];
@@ -50,25 +129,24 @@ class DiscoveryService {
         Logger.info('DiscoveryService: Grok returned no candidates');
         return [];
       }
-      return _validateAndBuildResults(candidates, _grokAiCandidates: candidates);
+      return _validateAndBuildResults(candidates);
     } catch (e, st) {
       Logger.error('DiscoveryService: suggestFromCategory failed', e, st);
       return [];
     }
   }
 
-  /// Validates Grok candidates against OMDb and builds [DiscoveryResult] list.
   Future<List<DiscoveryResult>> _validateAndBuildResults(
-    List<GrokMovieCandidate> candidates, {
-    required List<GrokMovieCandidate> _grokAiCandidates,
-  }) async {
+    List<GrokMovieCandidate> candidates,
+  ) async {
     final results = <DiscoveryResult>[];
 
     // Build a reason lookup by title (case-insensitive)
     final reasonMap = <String, String>{};
-    for (final c in _grokAiCandidates) {
+    for (final c in candidates) {
       reasonMap[c.title.toLowerCase()] = c.reason;
     }
+
 
     // Search + fetch detail in controlled batches to avoid rate limits
     final futures = candidates.take(10).map((c) async {

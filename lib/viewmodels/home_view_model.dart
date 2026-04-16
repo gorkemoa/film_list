@@ -13,7 +13,8 @@ class HomeViewModel extends ChangeNotifier {
     MovieCacheService? movieCacheService,
     DiscoveryService? discoveryService,
   }) : _movieCacheService = movieCacheService ?? MovieCacheService(),
-       _discoveryService = discoveryService ?? DiscoveryService();
+       _discoveryService = discoveryService ??
+           DiscoveryService(movieCacheService: movieCacheService);
 
   bool isLoading = false;
   String? errorMessage;

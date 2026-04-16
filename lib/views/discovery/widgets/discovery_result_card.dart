@@ -44,7 +44,8 @@ class DiscoveryResultCard extends StatelessWidget {
                     ? Image.network(
                         result.posterUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _fallbackPoster(),
+                        errorBuilder: (context, error, stack) =>
+                            _fallbackPoster(),
                       )
                     : _fallbackPoster(),
               ),

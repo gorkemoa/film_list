@@ -1,4 +1,5 @@
 import 'package:film_list/services/discovery_service.dart';
+import 'package:film_list/services/grok_ai_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -79,7 +80,15 @@ void main() async {
             movieCacheService: movieCacheService,
           ),
         ),
-        ChangeNotifierProvider(create: (_) => DiscoveryViewModel()),
+        ChangeNotifierProvider(
+          create: (_) => DiscoveryViewModel(
+            discoveryService: DiscoveryService(
+              grokAiService: GrokAiService(),
+              omdbDetailService: omdbDetailService,
+              omdbSearchService: omdbSearchService,
+            ),
+          ),
+        ),
         ChangeNotifierProvider(create: (_) => StatsViewModel()),
       ],
       child: const FilmListApp(),
