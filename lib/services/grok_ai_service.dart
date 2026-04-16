@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../core/utils/logger.dart';
 import '../models/discovery_preference.dart';
@@ -7,9 +8,9 @@ import '../models/discovery_preference.dart';
 /// Returns only IMDb-searchable English titles (or original titles).
 class GrokAiService {
   static const String _baseUrl = 'https://api.x.ai/v1/chat/completions';
-  // Replace with your actual xAI API key — store in env/secrets in production
-  static const String _apiKey = 'YOUR_XAI_API_KEY_HERE';
   static const String _model = 'grok-3-latest';
+
+  String get _apiKey => dotenv.env['XAI_API_KEY'] ?? '';
 
   /// Generate movie candidates from quiz preferences.
   Future<List<GrokMovieCandidate>> suggestFromPreference(
@@ -20,7 +21,9 @@ class GrokAiService {
   }
 
   /// Generate movie candidates from a quick category.
-  Future<List<GrokMovieCandidate>> suggestFromCategory(String categoryKey) async {
+  Future<List<GrokMovieCandidate>> suggestFromCategory(
+    String categoryKey,
+  ) async {
     final prompt = _buildCategoryPrompt(categoryKey);
     return _callGrok(prompt);
   }
@@ -62,7 +65,8 @@ Example format:
       'highRated': 'the highest-rated movies of all time on IMDb (>= 8.0)',
     };
 
-    final desc = categoryDescriptions[categoryKey] ??
+    final desc =
+        categoryDescriptions[categoryKey] ??
         'diverse, well-rated movies across genres';
 
     return '''

@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:film_list/services/discovery_service.dart';
 import 'package:film_list/services/grok_ai_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
@@ -28,6 +30,13 @@ import 'core/utils/logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final envPath = '${Directory.current.path}/.env';
+  if (await File(envPath).exists()) {
+    await dotenv.load(fileName: envPath);
+  } else {
+    Logger.debug('GrokAiService: .env file not found at $envPath');
+  }
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
