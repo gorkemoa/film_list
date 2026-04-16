@@ -11,10 +11,12 @@ import 'services/omdb_search_service.dart';
 import 'services/omdb_detail_service.dart';
 import 'services/poster_download_service.dart';
 import 'services/review_service.dart';
+import 'services/custom_list_service.dart';
 import 'viewmodels/home_view_model.dart';
 import 'viewmodels/add_movie_view_model.dart';
 import 'viewmodels/movie_detail_view_model.dart';
 import 'viewmodels/profile_view_model.dart';
+import 'viewmodels/custom_list_view_model.dart';
 import 'services/translation_service.dart';
 import 'views/home/home_view.dart';
 import 'views/widgets/upgrade_wrapper.dart';
@@ -66,6 +68,12 @@ void main() async {
           create: (_) => ProfileViewModel(
             movieCacheService: movieCacheService,
             reviewService: reviewService,
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => CustomListViewModel(
+            customListService: CustomListService(),
+            movieCacheService: movieCacheService,
           ),
         ),
       ],

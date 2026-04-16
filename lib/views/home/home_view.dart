@@ -6,7 +6,6 @@ import '../../core/responsive/size_config.dart';
 import '../../core/responsive/size_tokens.dart';
 import '../../models/movie.dart';
 import '../../viewmodels/home_view_model.dart';
-import '../../viewmodels/custom_list_view_model.dart';
 import '../add_movie/add_movie_view.dart';
 import '../movie_detail/movie_detail_view.dart';
 import '../profile/profile_view.dart';
@@ -94,39 +93,48 @@ class _HomeViewState extends State<HomeView> {
                             viewModel.init();
                           });
                         },
-                        child: ClipRRect(
-                          borderRadius: SizeTokens.circularRadiusSmall,
-                          child: movie.posterLocalPath != null
-                              ? Image.file(
-                                  File(movie.posterLocalPath!),
-                                  width: SizeConfig.relativeSize(130),
-                                  fit: BoxFit.cover,
-                                  cacheWidth: 300,
-                                  cacheHeight: 444,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      CustomPosterWidget(
-                                        movie: movie,
-                                        width: SizeConfig.relativeSize(130),
-                                      ),
-                                )
-                              : (movie.posterUrl != null &&
-                                    movie.posterUrl != 'N/A')
-                              ? Image.network(
-                                  movie.posterUrl!,
-                                  width: SizeConfig.relativeSize(130),
-                                  fit: BoxFit.cover,
-                                  cacheWidth: 300,
-                                  cacheHeight: 444,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      CustomPosterWidget(
-                                        movie: movie,
-                                        width: SizeConfig.relativeSize(130),
-                                      ),
-                                )
-                              : CustomPosterWidget(
-                                  movie: movie,
-                                  width: SizeConfig.relativeSize(130),
-                                ),
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: SizeTokens.circularRadiusSmall,
+                              child: movie.posterLocalPath != null
+                                  ? Image.file(
+                                      File(movie.posterLocalPath!),
+                                      width: SizeConfig.relativeSize(130),
+                                      fit: BoxFit.cover,
+                                      cacheWidth: 300,
+                                      cacheHeight: 444,
+                                      errorBuilder: (context, error, stackTrace) =>
+                                          CustomPosterWidget(
+                                            movie: movie,
+                                            width: SizeConfig.relativeSize(130),
+                                          ),
+                                    )
+                                  : (movie.posterUrl != null &&
+                                        movie.posterUrl != 'N/A')
+                                  ? Image.network(
+                                      movie.posterUrl!,
+                                      width: SizeConfig.relativeSize(130),
+                                      fit: BoxFit.cover,
+                                      cacheWidth: 300,
+                                      cacheHeight: 444,
+                                      errorBuilder: (context, error, stackTrace) =>
+                                          CustomPosterWidget(
+                                            movie: movie,
+                                            width: SizeConfig.relativeSize(130),
+                                          ),
+                                    )
+                                  : CustomPosterWidget(
+                                      movie: movie,
+                                      width: SizeConfig.relativeSize(130),
+                                    ),
+                            ),
+                            Positioned(
+                              top: 6,
+                              left: 6,
+                              child: WatchStatusBadge(status: movie.watchStatus),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -163,6 +171,30 @@ class _HomeViewState extends State<HomeView> {
           if (viewModel.sliderMovies.isNotEmpty)
             SliderWidget(movies: viewModel.sliderMovies),
           SizedBox(height: SizeTokens.paddingLarge),
+          // Currently Watching
+          if (viewModel.watchingMovies.isNotEmpty)
+            _buildHorizontalList(
+              context,
+              Translations.tr('currentlyWatching'),
+              viewModel.watchingMovies,
+              viewModel,
+            ),
+          // Recently Viewed
+          if (viewModel.recentlyViewed.isNotEmpty)
+            _buildHorizontalList(
+              context,
+              Translations.tr('recentlyViewed'),
+              viewModel.recentlyViewed,
+              viewModel,
+            ),
+          // Recently Added
+          _buildHorizontalList(
+            context,
+            Translations.tr('recentlyAdded'),
+            viewModel.recentlyAdded,
+            viewModel,
+            showPlaceholderIfEmpty: true,
+          ),
           if (viewModel.recommendedMovies.isNotEmpty)
             _buildHorizontalList(
               context,
@@ -170,22 +202,15 @@ class _HomeViewState extends State<HomeView> {
               viewModel.recommendedMovies,
               viewModel,
             ),
-          // Always show To Watch and Watched lists on home
-          _buildHorizontalList(
-            context,
-            Translations.tr('toWatchTab'),
-            viewModel.toWatchMovies,
-            viewModel,
-            showPlaceholderIfEmpty: true,
-          ),
-          _buildHorizontalList(
-            context,
-            Translations.tr('watchedTab'),
-            viewModel.watchedMovies,
-            viewModel,
-            showPlaceholderIfEmpty: true,
-          ),
-          SizedBox(height: SizeConfig.relativeSize(80)), // Bottom padding
+          // Watch Again
+          if (viewModel.rewatchMovies.isNotEmpty)
+            _buildHorizontalList(
+              context,
+              Translations.tr('watchAgainList'),
+              viewModel.rewatchMovies,
+              viewModel,
+            ),
+          SizedBox(height: SizeConfig.relativeSize(80)),
         ],
       ),
     );
@@ -266,11 +291,10 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     SizeConfig.init(context);
 
-    // Dynamic Title based on tab
     String? appBarTitle;
     if (_currentIndex == 1) appBarTitle = Translations.tr('watchedTab');
     if (_currentIndex == 2) appBarTitle = Translations.tr('addTab');
-    if (_currentIndex == 3) appBarTitle = Translations.tr('toWatchTab');
+    if (_currentIndex == 3) appBarTitle = Translations.tr('listsTab');
     if (_currentIndex == 4) appBarTitle = Translations.tr('profileTab');
 
     return Scaffold(
@@ -304,13 +328,14 @@ class _HomeViewState extends State<HomeView> {
               _buildHomeTab(context, viewModel),
               _buildMovieListTab(context, viewModel, viewModel.watchedMovies),
               const AddMovieView(),
-              _buildMovieListTab(context, viewModel, viewModel.toWatchMovies),
+              const ListsView(),
               const ProfileView(),
             ],
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'home_fab',
         onPressed: () => setState(() => _currentIndex = 2),
         backgroundColor: AppTheme.primaryColor,
         elevation: 8,
@@ -327,8 +352,8 @@ class _HomeViewState extends State<HomeView> {
           children: [
             _buildNavItem(0, Icons.home_rounded, 'homeTab'),
             _buildNavItem(1, Icons.visibility_rounded, 'watchedTab'),
-            const SizedBox(width: 40), // FAB alanı
-            _buildNavItem(3, Icons.visibility_off_rounded, 'toWatchTab'),
+            const SizedBox(width: 40),
+            _buildNavItem(3, Icons.playlist_play_rounded, 'listsTab'),
             _buildNavItem(4, Icons.person_rounded, 'profileTab'),
           ],
         ),

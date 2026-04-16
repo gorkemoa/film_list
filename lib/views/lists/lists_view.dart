@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../app/translations.dart';
@@ -7,7 +8,6 @@ import '../../core/responsive/size_config.dart';
 import '../../core/responsive/size_tokens.dart';
 import '../../models/custom_list.dart';
 import '../../models/movie.dart';
-import '../../models/watch_status.dart';
 import '../../viewmodels/custom_list_view_model.dart';
 import '../../viewmodels/home_view_model.dart';
 import '../movie_detail/movie_detail_view.dart';
@@ -32,87 +32,134 @@ class _ListsViewState extends State<ListsView> {
 
   void _showCreateListDialog() {
     final controller = TextEditingController();
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surfaceColor,
-        title: Text(
-          Translations.tr('createList'),
-          style: const TextStyle(color: Colors.white),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: controller,
-              autofocus: true,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: Translations.tr('listNameHint'),
-                hintStyle:
-                    const TextStyle(color: AppTheme.textSecondaryColor),
-                border: const OutlineInputBorder(),
-                filled: true,
-                fillColor: AppTheme.surfaceLightColor,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          padding: EdgeInsets.all(SizeTokens.paddingLarge),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: AppTheme.textTertiaryColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                alignment: Alignment.center,
               ),
-            ),
-            SizedBox(height: SizeTokens.paddingMedium),
-            Text(
-              Translations.tr('suggestedListNames'),
-              style: const TextStyle(
-                color: AppTheme.textSecondaryColor,
-                fontSize: 12,
+              Text(
+                Translations.tr('createList'),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: SizeTokens.textTitle,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: _suggestedNames().map((name) {
-                return GestureDetector(
-                  onTap: () => controller.text = name,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceLightColor,
-                      borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 20),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: Translations.tr('listNameHint'),
+                  hintStyle: const TextStyle(
+                    color: AppTheme.textSecondaryColor,
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.surfaceLightColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                Translations.tr('suggestedListNames'),
+                style: const TextStyle(
+                  color: AppTheme.textSecondaryColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _suggestedNames().map((name) {
+                  return GestureDetector(
+                    onTap: () => controller.text = name,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceLightColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
-                    child: Text(
-                      name,
-                      style: const TextStyle(
-                          color: AppTheme.textSecondaryColor, fontSize: 12),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (controller.text.trim().isNotEmpty) {
+                      context.read<CustomListViewModel>().createList(
+                        controller.text.trim(),
+                      );
+                      Navigator.pop(ctx);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
                     ),
                   ),
-                );
-              }).toList(),
-            ),
-          ],
+                  child: Text(
+                    Translations.tr('save'),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              Translations.tr('cancel'),
-              style: const TextStyle(color: AppTheme.textSecondaryColor),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                context
-                    .read<CustomListViewModel>()
-                    .createList(controller.text.trim());
-                Navigator.pop(ctx);
-              }
-            },
-            child: Text(
-              Translations.tr('save'),
-              style: const TextStyle(color: AppTheme.primaryColor),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -122,30 +169,30 @@ class _ListsViewState extends State<ListsView> {
     switch (lang) {
       case Language.tr:
         return [
-          'Hafta sonu izle',
+          'Hafta sonu',
           'Korku gecesi',
           'Oscar adayları',
-          'Babamla izlenecekler',
-          '90 dakika altı',
-          'Tekrar izlenecekler',
+          'Aile ile izlenecekler',
+          'Favorilerim',
+          '90dk altı',
         ];
       case Language.es:
         return [
-          'Ver el fin de semana',
+          'Finde semana',
           'Noche de terror',
-          'Candidatos al Oscar',
-          'Con papá',
-          'Menos de 90 min',
-          'Para volver a ver',
+          'Oscars',
+          'Familia',
+          'Favoritos',
+          'Cortos',
         ];
       default:
         return [
-          'Weekend Watch',
+          'Weekend',
           'Horror Night',
-          'Oscar Nominees',
-          'Watch with Dad',
-          'Under 90 min',
-          'Rewatch List',
+          'Oscars',
+          'Watch with Family',
+          'Favorites',
+          'Under 90min',
         ];
     }
   }
@@ -153,150 +200,56 @@ class _ListsViewState extends State<ListsView> {
   void _showDeleteConfirm(BuildContext context, CustomList list) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surfaceColor,
-        title: Text(
-          Translations.tr('deleteList'),
-          style: const TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          Translations.tr('deleteListConfirm'),
-          style: const TextStyle(color: AppTheme.textSecondaryColor),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              Translations.tr('cancel'),
-              style: const TextStyle(color: AppTheme.textSecondaryColor),
+      builder: (ctx) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: AlertDialog(
+          backgroundColor: AppTheme.surfaceColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            Translations.tr('deleteList'),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          TextButton(
-            onPressed: () {
-              context.read<CustomListViewModel>().deleteList(list.id);
-              Navigator.pop(ctx);
-            },
-            child: Text(
-              Translations.tr('delete'),
-              style: const TextStyle(color: Colors.red),
-            ),
+          content: Text(
+            Translations.tr('deleteListConfirm'),
+            style: const TextStyle(color: AppTheme.textSecondaryColor),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                Translations.tr('cancel'),
+                style: const TextStyle(color: AppTheme.textSecondaryColor),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                context.read<CustomListViewModel>().deleteList(list.id);
+                Navigator.pop(ctx);
+              },
+              child: Text(
+                Translations.tr('delete'),
+                style: const TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-    );
-  }
-
-  Widget _buildToWatchSection(BuildContext context) {
-    final homeVm = context.watch<HomeViewModel>();
-    final toWatchMovies = homeVm.toWatchMovies;
-    if (toWatchMovies.isEmpty) return const SizedBox();
-    return _ListSectionCard(
-      title: Translations.tr('statusToWatch'),
-      icon: Icons.bookmark_outline_rounded,
-      iconColor: const Color(0xFF607D8B),
-      count: toWatchMovies.length,
-      previewMovies: toWatchMovies.take(3).toList(),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => _StatusMovieListView(
-              title: Translations.tr('statusToWatch'),
-              movies: toWatchMovies,
-            ),
-          ),
-        ).then((_) {
-          if (!context.mounted) return;
-          homeVm.init();
-        });
-      },
-    );
-  }
-
-  Widget _buildWatchingSection(BuildContext context) {
-    final homeVm = context.watch<HomeViewModel>();
-    final watchingMovies = homeVm.watchingMovies;
-    if (watchingMovies.isEmpty) return const SizedBox();
-    return _ListSectionCard(
-      title: Translations.tr('currentlyWatching'),
-      icon: Icons.play_circle_outline_rounded,
-      iconColor: const Color(0xFF2196F3),
-      count: watchingMovies.length,
-      previewMovies: watchingMovies.take(3).toList(),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => _StatusMovieListView(
-              title: Translations.tr('currentlyWatching'),
-              movies: watchingMovies,
-            ),
-          ),
-        ).then((_) {
-          if (!context.mounted) return;
-          homeVm.init();
-        });
-      },
-    );
-  }
-
-  Widget _buildDroppedSection(BuildContext context) {
-    final homeVm = context.watch<HomeViewModel>();
-    final droppedMovies = homeVm.droppedMovies;
-    if (droppedMovies.isEmpty) return const SizedBox();
-    return _ListSectionCard(
-      title: Translations.tr('droppedList'),
-      icon: Icons.cancel_outlined,
-      iconColor: const Color(0xFFFF5722),
-      count: droppedMovies.length,
-      previewMovies: droppedMovies.take(3).toList(),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => _StatusMovieListView(
-              title: Translations.tr('droppedList'),
-              movies: droppedMovies,
-            ),
-          ),
-        ).then((_) {
-          if (!context.mounted) return;
-          homeVm.init();
-        });
-      },
-    );
-  }
-
-  Widget _buildRewatchSection(BuildContext context) {
-    final homeVm = context.watch<HomeViewModel>();
-    final rewatchMovies = homeVm.rewatchMovies;
-    if (rewatchMovies.isEmpty) return const SizedBox();
-    return _ListSectionCard(
-      title: Translations.tr('watchAgainList'),
-      icon: Icons.replay_rounded,
-      iconColor: const Color(0xFFFF9800),
-      count: rewatchMovies.length,
-      previewMovies: rewatchMovies.take(3).toList(),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => _StatusMovieListView(
-              title: Translations.tr('watchAgainList'),
-              movies: rewatchMovies,
-            ),
-          ),
-        ).then((_) {
-          if (!context.mounted) return;
-          homeVm.init();
-        });
-      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
+    final homeVm = context.watch<HomeViewModel>();
+
     return Consumer<CustomListViewModel>(
       builder: (context, vm, _) {
         return Scaffold(
@@ -304,194 +257,334 @@ class _ListsViewState extends State<ListsView> {
           body: vm.isLoading
               ? const Center(child: CircularProgressIndicator())
               : CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
                   slivers: [
+                    // Header Section
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(SizeTokens.paddingLarge),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              Translations.tr('myLists'),
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            Text(
+                              Translations.tr('organizeYourMovies'),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: AppTheme.textSecondaryColor,
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Smart Categories Grid
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: SizeTokens.paddingLarge,
+                      ),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 12,
+                              crossAxisSpacing: 12,
+                              childAspectRatio: 1.5,
+                            ),
+                        delegate: SliverChildListDelegate([
+                          _SmartCategoryCard(
+                            title: Translations.tr('statusToWatch'),
+                            icon: Icons.bookmark_outline_rounded,
+                            count: homeVm.toWatchMovies.length,
+                            color: const Color(0xFF607D8B),
+                            movies: homeVm.toWatchMovies,
+                          ),
+                          _SmartCategoryCard(
+                            title: Translations.tr('currentlyWatching'),
+                            icon: Icons.play_circle_outline_rounded,
+                            count: homeVm.watchingMovies.length,
+                            color: const Color(0xFF2196F3),
+                            movies: homeVm.watchingMovies,
+                          ),
+                          _SmartCategoryCard(
+                            title: Translations.tr('watchAgainList'),
+                            icon: Icons.replay_rounded,
+                            count: homeVm.rewatchMovies.length,
+                            color: const Color(0xFFFF9800),
+                            movies: homeVm.rewatchMovies,
+                          ),
+                          _SmartCategoryCard(
+                            title: Translations.tr('droppedList'),
+                            icon: Icons.cancel_outlined,
+                            count: homeVm.droppedMovies.length,
+                            color: const Color(0xFFFF5722),
+                            movies: homeVm.droppedMovies,
+                          ),
+                        ]),
+                      ),
+                    ),
+
+                    // Custom Lists Header
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(
+                          SizeTokens.paddingLarge,
+                          SizeTokens.paddingXLarge,
+                          SizeTokens.paddingLarge,
                           SizeTokens.paddingMedium,
-                          SizeTokens.paddingMedium,
-                          SizeTokens.paddingMedium,
-                          SizeTokens.paddingSmall,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              Translations.tr('myLists'),
+                              Translations.tr('customLists'),
                               style: TextStyle(
-                                fontSize: SizeTokens.textTitle,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                             ),
-                            IconButton(
-                              onPressed: _showCreateListDialog,
-                              icon: const Icon(Icons.add_circle_outline,
-                                  color: AppTheme.primaryColor),
-                              tooltip: Translations.tr('createList'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // Status-based built-in lists
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: SizeTokens.paddingMedium),
-                        child: Column(
-                          children: [
-                            _buildToWatchSection(context),
-                            _buildWatchingSection(context),
-                            _buildDroppedSection(context),
-                            _buildRewatchSection(context),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // Divider + custom lists header
-                    if (vm.lists.isNotEmpty)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            SizeTokens.paddingMedium,
-                            SizeTokens.paddingLarge,
-                            SizeTokens.paddingMedium,
-                            SizeTokens.paddingSmall,
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.playlist_play_rounded,
-                                color: AppTheme.primaryColor,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                Translations.tr('createList'),
-                                style: TextStyle(
-                                  fontSize: SizeTokens.textLarge,
-                                  fontWeight: FontWeight.bold,
+                            GestureDetector(
+                              onTap: _showCreateListDialog,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
                                 ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryColor.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: AppTheme.primaryColor.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.add,
+                                      color: AppTheme.primaryColor,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      Translations.tr('create'),
+                                      style: const TextStyle(
+                                        color: AppTheme.primaryColor,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Custom Lists Content
+                    if (vm.lists.isEmpty)
+                      SliverToBoxAdapter(
+                        child: Container(
+                          margin: EdgeInsets.all(SizeTokens.paddingLarge),
+                          padding: const EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceColor,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: AppTheme.surfaceLightColor,
+                              style: BorderStyle.solid,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.playlist_add_rounded,
+                                size: 48,
+                                color: AppTheme.textTertiaryColor,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                Translations.tr('noCustomLists'),
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondaryColor,
+                                  fontSize: 14,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
                             ],
                           ),
                         ),
-                      ),
-                    // Custom lists
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final list = vm.lists[index];
-                          final movies = vm.moviesForList(list);
-                          return Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: SizeTokens.paddingMedium,
-                              vertical: SizeTokens.paddingSmall / 2,
-                            ),
-                            child: _ListSectionCard(
-                              title: list.name,
-                              icon: Icons.list_alt_rounded,
-                              iconColor: AppTheme.primaryColor,
-                              count: list.movieIds.length,
-                              previewMovies: movies.take(3).toList(),
+                      )
+                    else
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: SizeTokens.paddingLarge,
+                        ),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final list = vm.lists[index];
+                            final movies = vm.moviesForList(list);
+                            return _CustomListCard(
+                              list: list,
+                              movies: movies,
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => CustomListDetailView(
-                                        customList: list),
+                                    builder: (_) =>
+                                        CustomListDetailView(customList: list),
                                   ),
                                 ).then((_) {
-                                  if (!context.mounted) return;
-                                  vm.init();
+                                  if (context.mounted) vm.init();
                                 });
                               },
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete_outline,
-                                    color: AppTheme.textSecondaryColor,
-                                    size: 20),
-                                onPressed: () =>
-                                    _showDeleteConfirm(context, list),
-                              ),
-                            ),
-                          );
-                        },
-                        childCount: vm.lists.length,
-                      ),
-                    ),
-                    // Empty state
-                    if (vm.lists.isEmpty &&
-                        context.watch<HomeViewModel>().toWatchMovies.isEmpty &&
-                        context.watch<HomeViewModel>().watchingMovies.isEmpty &&
-                        context.watch<HomeViewModel>().droppedMovies.isEmpty &&
-                        context.watch<HomeViewModel>().rewatchMovies.isEmpty)
-                      SliverFillRemaining(
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.playlist_add_rounded,
-                                size: 64,
-                                color: AppTheme.textTertiaryColor,
-                              ),
-                              SizedBox(height: SizeTokens.paddingMedium),
-                              Text(
-                                Translations.tr('noLists'),
-                                style: const TextStyle(
-                                  color: AppTheme.textSecondaryColor,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: SizeTokens.paddingLarge),
-                              ElevatedButton.icon(
-                                onPressed: _showCreateListDialog,
-                                icon: const Icon(Icons.add),
-                                label:
-                                    Text(Translations.tr('createList')),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primaryColor,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
+                              onDelete: () => _showDeleteConfirm(context, list),
+                            );
+                          }, childCount: vm.lists.length),
                         ),
                       ),
+
+                    // Bottom Spacer
                     SliverToBoxAdapter(
-                        child: SizedBox(
-                            height: SizeConfig.relativeSize(80))),
+                      child: SizedBox(height: SizeConfig.relativeSize(100)),
+                    ),
                   ],
                 ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: _showCreateListDialog,
-            backgroundColor: AppTheme.primaryColor,
-            mini: true,
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
         );
       },
     );
   }
 }
 
-class _ListSectionCard extends StatelessWidget {
+class _SmartCategoryCard extends StatelessWidget {
   final String title;
   final IconData icon;
-  final Color iconColor;
   final int count;
-  final List<Movie> previewMovies;
-  final VoidCallback onTap;
-  final Widget? trailing;
+  final Color color;
+  final List<Movie> movies;
 
-  const _ListSectionCard({
+  const _SmartCategoryCard({
     required this.title,
     required this.icon,
-    required this.iconColor,
     required this.count,
-    required this.previewMovies,
+    required this.color,
+    required this.movies,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => _StatusMovieListView(title: title, movies: movies),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -10,
+                bottom: -10,
+                child: Icon(
+                  icon,
+                  size: 64,
+                  color: color.withValues(alpha: 0.1),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, color: color, size: 20),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '$count ${Translations.tr('items')}',
+                          style: TextStyle(
+                            color: AppTheme.textSecondaryColor,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomListCard extends StatelessWidget {
+  final CustomList list;
+  final List<Movie> movies;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  const _CustomListCard({
+    required this.list,
+    required this.movies,
     required this.onTap,
-    this.trailing,
+    required this.onDelete,
   });
 
   @override
@@ -499,83 +592,152 @@ class _ListSectionCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(bottom: 16),
+        height: 100,
         decoration: BoxDecoration(
           color: AppTheme.surfaceColor,
-          borderRadius: SizeTokens.circularRadiusMedium,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: AppTheme.surfaceLightColor),
         ),
         child: Row(
           children: [
+            // Preview Stack
             Container(
-              width: 44,
-              height: 44,
+              width: 80,
+              height: 100,
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
+                color: AppTheme.surfaceLightColor,
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(20),
+                ),
               ),
-              child: Icon(icon, color: iconColor, size: 22),
+              child: movies.isEmpty
+                  ? const Icon(
+                      Icons.movie_filter_rounded,
+                      color: AppTheme.textTertiaryColor,
+                    )
+                  : Stack(
+                      children: movies.take(3).toList().asMap().entries.map((
+                        entry,
+                      ) {
+                        final i = entry.key;
+                        final movie = entry.value;
+                        return Positioned(
+                          left: i * 8.0 + 8.0,
+                          top: i * 4.0 + 10.0,
+                          child: Transform.rotate(
+                            angle: (i - 1) * 0.05,
+                            child: Container(
+                              width: 50,
+                              height: 75,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.5),
+                                    blurRadius: 10,
+                                    offset: const Offset(4, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: _miniPoster(movie),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    list.name,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
-                    '$count',
-                    style: const TextStyle(
+                    '${list.movieIds.length} ${Translations.tr('items')}',
+                    style: TextStyle(
                       color: AppTheme.textSecondaryColor,
-                      fontSize: 12,
+                      fontSize: 14,
                     ),
                   ),
                 ],
               ),
             ),
-            if (previewMovies.isNotEmpty) ...[
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 60,
-                height: 40,
-                child: Stack(
-                  children: previewMovies
-                      .take(3)
-                      .toList()
-                      .asMap()
-                      .entries
-                      .map((entry) {
-                    final i = entry.key;
-                    final movie = entry.value;
-                    return Positioned(
-                      left: i * 16.0,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: _miniPoster(movie),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
-            if (trailing != null)
-              trailing!
-            else
-              const Icon(
-                Icons.chevron_right_rounded,
+            IconButton(
+              icon: const Icon(
+                Icons.more_vert_rounded,
                 color: AppTheme.textSecondaryColor,
               ),
+              onPressed: () {
+                _showListOptions(context);
+              },
+            ),
+            const SizedBox(width: 8),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showListOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surfaceColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppTheme.textTertiaryColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ListTile(
+            leading: const Icon(Icons.open_in_new_rounded, color: Colors.white),
+            title: Text(
+              Translations.tr('open'),
+              style: const TextStyle(color: Colors.white),
+            ),
+            onTap: () {
+              Navigator.pop(ctx);
+              onTap();
+            },
+          ),
+          ListTile(
+            leading: const Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.red,
+            ),
+            title: Text(
+              Translations.tr('delete'),
+              style: const TextStyle(color: Colors.red),
+            ),
+            onTap: () {
+              Navigator.pop(ctx);
+              onDelete();
+            },
+          ),
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }
@@ -584,64 +746,68 @@ class _ListSectionCard extends StatelessWidget {
     if (movie.posterLocalPath != null) {
       return Image.file(
         File(movie.posterLocalPath!),
-        width: 28,
-        height: 40,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            _fallback(movie),
+        errorBuilder: (_, __, ___) => _fallback(),
       );
     }
     if (movie.posterUrl != null && movie.posterUrl != 'N/A') {
       return Image.network(
         movie.posterUrl!,
-        width: 28,
-        height: 40,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            _fallback(movie),
+        errorBuilder: (_, __, ___) => _fallback(),
       );
     }
-    return _fallback(movie);
+    return _fallback();
   }
 
-  Widget _fallback(Movie movie) {
+  Widget _fallback() {
     return Container(
-      width: 28,
-      height: 40,
       color: AppTheme.surfaceLightColor,
-      child: const Icon(Icons.movie_outlined,
-          size: 12, color: AppTheme.textTertiaryColor),
+      child: const Icon(
+        Icons.movie_outlined,
+        size: 20,
+        color: AppTheme.textTertiaryColor,
+      ),
     );
   }
 }
 
-/// Reusable screen that shows movies filtered by watch status.
 class _StatusMovieListView extends StatelessWidget {
   final String title;
   final List<Movie> movies;
 
-  const _StatusMovieListView({
-    required this.title,
-    required this.movies,
-  });
+  const _StatusMovieListView({required this.title, required this.movies});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: Text(title,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: movies.isEmpty
           ? Center(
-              child: Text(
-                Translations.tr('emptyMovies'),
-                style: const TextStyle(color: AppTheme.textSecondaryColor),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.movie_filter_rounded,
+                    size: 80,
+                    color: AppTheme.textTertiaryColor,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    Translations.tr('emptyMovies'),
+                    style: const TextStyle(
+                      color: AppTheme.textSecondaryColor,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
             )
           : GridView.builder(
-              padding: EdgeInsets.all(SizeTokens.paddingMedium),
+              padding: EdgeInsets.all(SizeTokens.paddingLarge),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 childAspectRatio: 0.65,
@@ -661,9 +827,12 @@ class _StatusMovieListView extends StatelessWidget {
                       ),
                     );
                   },
-                  child: ClipRRect(
-                    borderRadius: SizeTokens.circularRadiusSmall,
-                    child: _buildPoster(movie),
+                  child: Hero(
+                    tag: 'movie_poster_${movie.id}_$title',
+                    child: ClipRRect(
+                      borderRadius: SizeTokens.circularRadiusSmall,
+                      child: _buildPoster(movie),
+                    ),
                   ),
                 );
               },

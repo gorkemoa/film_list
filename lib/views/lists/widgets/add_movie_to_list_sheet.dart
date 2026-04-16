@@ -1,13 +1,12 @@
 import 'dart:io';
+import 'package:film_list/core/responsive/size_config.dart';
+import 'package:film_list/core/responsive/size_tokens.dart';
+import 'package:film_list/models/movie.dart';
+import 'package:film_list/viewmodels/custom_list_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../app/translations.dart';
 import '../../../app/app_theme.dart';
-import '../../../core/responsive/size_config.dart';
-import '../../../core/responsive/size_tokens.dart';
-import '../../../models/movie.dart';
-import '../../../viewmodels/custom_list_view_model.dart';
-import '../../widgets/custom_poster_widget.dart';
 
 class AddMovieToListSheet extends StatelessWidget {
   final String listId;

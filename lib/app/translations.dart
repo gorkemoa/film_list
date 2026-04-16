@@ -219,6 +219,12 @@ class Translations {
     'suggestedListNames:Önerilen İsimler:Suggested Names:Nombres Sugeridos:Noms suggérés:Nomes Sugeridos:Vorgeschlagene Namen',
     'addMovieToList:Listeye Film Ekle:Add Movie to List:Añadir a lista:Ajouter à la liste:Adicionar à Lista:Zur Liste hinzufügen',
     'manageListMembership:Listeleri Yönet:Manage Lists:Gestionar Listas:Gérer les listes:Gerenciar Listas:Listen verwalten',
+    'organizeYourMovies:İzlediğiniz her şeyi düzenli tutun:Organize everything you watch:Organiza todo lo que ves:Organisez tout ce que vous regardez:Organize tudo o que você assiste:Organisieren Sie alles, was Sie sehen',
+    'customLists:Özel Listelerim:My Custom Lists:Mis Listas Personalizadas:Mes listes personnalisées:Minhas Listas Personalizadas:Meine benutzerdefinierten Listen',
+    'create:Oluştur:Create:Crear:Créer:Criar:Erstellen',
+    'noCustomLists:Henüz bir liste oluşturmadınız. Yeni bir liste oluşturarak içeriklerinizi kategorize etmeye başlayın.:You haven\'t created any lists yet. Start categorizing your content by creating a new list.:Aún no has creado ninguna lista. Empieza a categorizar tu contenido creando una nueva lista.:Vous n\'avez pas encore créé de liste. Commencez à catégoriser votre contenu en créant une nouvelle liste.:Você ainda não criou nenhuma lista. Comece a categorizar seu conteúdo criando uma nova lista.:Sie haben noch keine Listen erstellt. Beginnen Sie mit der Kategorisierung Ihrer Inhalte, indem Sie eine neue Liste erstellen.',
+    'items:İçerik:Items:Ítems:Éléments:Itens:Elemente',
+    'open:Aç:Open:Abrir:Ouvrir:Abrir:Öffnen',
   ];
 
   static String tr(String key) {

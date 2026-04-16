@@ -9,6 +9,7 @@ import '../../models/review.dart';
 import '../../viewmodels/movie_detail_view_model.dart';
 import '../widgets/custom_poster_widget.dart';
 import '../../app/app_theme.dart';
+import '../home/widgets/watch_status_badge_widget.dart';
 
 class MovieDetailView extends StatefulWidget {
   final Movie movie;
@@ -474,27 +475,15 @@ class _MovieDetailViewState extends State<MovieDetailView> {
                         buildInfoSection(),
                       ],
 
-                      // Watch / Rate Section
+                      // Watch Status + Rate Section
                       if (viewModel.isLocal) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              Translations.tr('isWatched'),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Switch(
-                              value: movie.isWatched,
-                              onChanged: (_) => viewModel.toggleWatched(movie),
-                              activeColor: AppTheme.primaryColor,
-                            ),
-                          ],
+                        WatchStatusPicker(
+                          current: movie.watchStatus,
+                          onChanged: (status) =>
+                              viewModel.updateWatchStatus(status),
                         ),
                         if (movie.isWatched) ...[
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 16),
                           _buildWatchCountRow(viewModel),
                           const SizedBox(height: 24),
 
