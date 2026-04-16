@@ -1,5 +1,6 @@
 import 'dart:convert';
 import '../models/movie.dart';
+import '../models/watch_status.dart';
 import '../core/database/local_db.dart';
 import '../core/utils/logger.dart';
 
@@ -33,7 +34,8 @@ class MovieService {
 
   Future<void> toggleWatched(Movie movie) async {
     try {
-      final updatedMovie = movie.copyWith(isWatched: !movie.isWatched);
+      final newStatus = movie.isWatched ? WatchStatus.toWatch : WatchStatus.watched;
+      final updatedMovie = movie.copyWith(watchStatus: newStatus);
       await addMovie(updatedMovie);
       Logger.info('Movie watched status toggled: ${updatedMovie.title}');
     } catch (e, st) {

@@ -40,7 +40,6 @@ class _CustomAddMovieViewState extends State<CustomAddMovieView> {
           year: _yearController.text.trim(),
           genre: _selectedGenres.map((key) => Translations.tr(key)).join(', '),
           type: _selectedType,
-          isWatched: false,
           watchCount: 0,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),

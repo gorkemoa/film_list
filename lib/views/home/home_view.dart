@@ -6,6 +6,7 @@ import '../../core/responsive/size_config.dart';
 import '../../core/responsive/size_tokens.dart';
 import '../../models/movie.dart';
 import '../../viewmodels/home_view_model.dart';
+import '../../viewmodels/custom_list_view_model.dart';
 import '../add_movie/add_movie_view.dart';
 import '../movie_detail/movie_detail_view.dart';
 import '../profile/profile_view.dart';
@@ -13,6 +14,8 @@ import '../widgets/custom_poster_widget.dart';
 import '../../app/app_theme.dart';
 import 'widgets/slider_widget.dart';
 import 'widgets/add_poster_widget.dart';
+import 'widgets/watch_status_badge_widget.dart';
+import '../lists/lists_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});

@@ -29,7 +29,6 @@ class OmdbSearchService {
                   year: item['Year'] ?? '',
                   genre: '',
                   posterUrl: item['Poster'] != 'N/A' ? item['Poster'] : null,
-                  isWatched: false,
                   createdAt: DateTime.now(),
                   updatedAt: DateTime.now(),
                   type: item['Type'],

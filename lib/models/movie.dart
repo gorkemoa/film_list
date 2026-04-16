@@ -1,4 +1,5 @@
 import 'rating.dart';
+import 'watch_status.dart';
 
 class Movie {
   final String id;
@@ -14,10 +15,10 @@ class Movie {
   final String? imdbVotes;
   final String? metascore;
   final List<Rating> ratings;
-  final bool isWatched;
+  final WatchStatus watchStatus;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final String? type; // Keeping type to not crash existing UI
+  final String? type;
   final int watchCount;
   final String? plot;
   final String? director;
@@ -28,6 +29,11 @@ class Movie {
   final String? boxOffice;
   final String? rated;
   final String? released;
+  final DateTime? lastViewedAt;
+
+  /// Derived from [watchStatus] for backward compatibility.
+  bool get isWatched =>
+      watchStatus == WatchStatus.watched || watchStatus == WatchStatus.rewatch;
 
   Movie({
     required this.id,
@@ -43,7 +49,7 @@ class Movie {
     this.imdbVotes,
     this.metascore,
     this.ratings = const [],
-    required this.isWatched,
+    this.watchStatus = WatchStatus.toWatch,
     required this.createdAt,
     required this.updatedAt,
     this.type,
@@ -57,6 +63,7 @@ class Movie {
     this.boxOffice,
     this.rated,
     this.released,
+    this.lastViewedAt,
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
@@ -78,7 +85,10 @@ class Movie {
               ?.map((e) => Rating.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      isWatched: json['is_watched'] == 1 || json['is_watched'] == true,
+      watchStatus: WatchStatusExtension.fromJson(
+        json['watch_status'] as String?,
+        isWatched: json['is_watched'] == 1 || json['is_watched'] == true,
+      ),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),
@@ -98,6 +108,9 @@ class Movie {
       boxOffice: json['box_office'] as String?,
       rated: json['rated'] as String?,
       released: json['released'] as String?,
+      lastViewedAt: json['last_viewed_at'] != null
+          ? DateTime.parse(json['last_viewed_at'] as String)
+          : null,
     );
   }
 
@@ -116,6 +129,7 @@ class Movie {
       'imdb_votes': imdbVotes,
       'metascore': metascore,
       'ratings': ratings.map((e) => e.toJson()).toList(),
+      'watch_status': watchStatus.toJson(),
       'is_watched': isWatched ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
@@ -130,6 +144,7 @@ class Movie {
       'box_office': boxOffice,
       'rated': rated,
       'released': released,
+      'last_viewed_at': lastViewedAt?.toIso8601String(),
     };
   }
 
@@ -147,7 +162,7 @@ class Movie {
     String? imdbVotes,
     String? metascore,
     List<Rating>? ratings,
-    bool? isWatched,
+    WatchStatus? watchStatus,
     DateTime? createdAt,
     DateTime? updatedAt,
     String? type,
@@ -161,6 +176,8 @@ class Movie {
     String? boxOffice,
     String? rated,
     String? released,
+    DateTime? lastViewedAt,
+    bool clearLastViewedAt = false,
   }) {
     return Movie(
       id: id ?? this.id,
@@ -176,7 +193,7 @@ class Movie {
       imdbVotes: imdbVotes ?? this.imdbVotes,
       metascore: metascore ?? this.metascore,
       ratings: ratings ?? this.ratings,
-      isWatched: isWatched ?? this.isWatched,
+      watchStatus: watchStatus ?? this.watchStatus,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       type: type ?? this.type,
@@ -190,6 +207,7 @@ class Movie {
       boxOffice: boxOffice ?? this.boxOffice,
       rated: rated ?? this.rated,
       released: released ?? this.released,
+      lastViewedAt: clearLastViewedAt ? null : (lastViewedAt ?? this.lastViewedAt),
     );
   }
 }

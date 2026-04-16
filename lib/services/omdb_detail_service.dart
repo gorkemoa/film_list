@@ -35,7 +35,6 @@ class OmdbDetailService {
                     ?.map((e) => Rating.fromJson(e as Map<String, dynamic>))
                     .toList() ??
                 [],
-            isWatched: false,
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
             type: data['Type'],

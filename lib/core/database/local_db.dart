@@ -9,6 +9,7 @@ class LocalDb {
       await Hive.openBox<String>(DbTables.moviesTable);
       await Hive.openBox<String>(DbTables.reviewsTable);
       await Hive.openBox<String>(DbTables.searchCacheTable);
+      await Hive.openBox<String>(DbTables.customListsTable);
       Logger.info('Local DB initialized successfully');
     } catch (e, stacktrace) {
       Logger.error('Error initializing Local DB', e, stacktrace);
@@ -19,4 +20,6 @@ class LocalDb {
   static Box<String> get reviewBox => Hive.box<String>(DbTables.reviewsTable);
   static Box<String> get searchCacheBox =>
       Hive.box<String>(DbTables.searchCacheTable);
+  static Box<String> get customListBox =>
+      Hive.box<String>(DbTables.customListsTable);
 }

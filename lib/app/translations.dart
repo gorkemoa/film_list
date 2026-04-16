@@ -190,6 +190,35 @@ class Translations {
     'ratingHigher:Bu yapıma IMDb\'den {diff} puan daha yüksek verdiniz!:You rated this {diff} points HIGHER than IMDb!:¡Puntuaste esto {diff} puntos MÁS que en IMDb!:Vous avez noté ceci {diff} points PLUS qu\'IMDb !:Você avaliou isso {diff} pontos ACIMA do IMDb!:Sie haben das {diff} Punkte HÖHER als IMDb bewertet!',
     'ratingLower:Bu yapıma IMDb\'den {diff} puan daha düşük verdiniz.:You rated this {diff} points LOWER than IMDb.:Puntuaste esto {diff} puntos MENOS que en IMDb.:Vous avez noté ceci {diff} points MOINS qu\'IMDb.:Você avaliou isso {diff} pontos ABAIXO do IMDb.:Sie haben das {diff} Punkte NIEDRIGER als IMDb bewertet.',
     'ratingMatch:Puanınız IMDb ile tam olarak eşleşiyor!:Your rating matches IMDb exactly!:¡Tu puntuación coincide exactamente con IMDb!:Votre note correspond exactement à IMDb !:Sua avaliação corresponde exatamente ao IMDb!:Ihre Bewertung stimmt genau mit IMDb überein!',
+    // Watch Status
+    'watchStatus:İzleme Durumu:Watch Status:Estado:Statut:Status:Sehstatus',
+    'statusToWatch:İzlenecek:To Watch:Para Ver:À regarder:Para Assistir:Noch sehen',
+    'statusWatching:İzleniyor:Watching:Viendo:En cours:Assistindo:Gerade sehen',
+    'statusWatched:İzlendi:Watched:Visto:Regardé:Assistido:Gesehen',
+    'statusDropped:Yarıda Bıraktı:Dropped:Abandonado:Abandonné:Abandonado:Abgebrochen',
+    'statusRewatch:Tekrar İzle:Rewatch:Volver a ver:Revoir:Reassistir:Nochmal sehen',
+    // Home sections
+    'recentlyViewed:Son Bakılanlar:Recently Viewed:Visto Recientemente:Vus récemment:Vistos Recentemente:Zuletzt gesehen',
+    'recentlyAdded:Son Eklenenler:Recently Added:Añadidos Recientemente:Ajoutés récemment:Adicionados Recentemente:Zuletzt hinzugefügt',
+    'currentlyWatching:Şu An İzleniyor:Currently Watching:Viendo Ahora:En cours:Assistindo Agora:Gerade am Sehen',
+    'watchAgainList:Tekrar İzlenecekler:Watch Again:Ver de Nuevo:À revoir:Para Reassistir:Nochmal ansehen',
+    'droppedList:Yarıda Bırakılanlar:Dropped:Abandonados:Abandonnés:Abandonados:Abgebrochen',
+    // Custom Lists
+    'listsTab:Listelerim:My Lists:Mis Listas:Mes Listes:Minhas Listas:Meine Listen',
+    'myLists:Listelerim:My Lists:Mis Listas:Mes Listes:Minhas Listas:Meine Listen',
+    'createList:Liste Oluştur:Create List:Crear Lista:Créer une liste:Criar Lista:Liste erstellen',
+    'listName:Liste Adı:List Name:Nombre de Lista:Nom de la liste:Nome da Lista:Listenname',
+    'listNameHint:ör. Hafta sonu izle...:e.g. Weekend watch...:ej. Para ver el finde...:ex. À voir ce week-end...:ex. Para ver no fds...:z.B. Wochenend-Watch...',
+    'addToCustomList:Listeye Ekle:Add to List:Añadir a Lista:Ajouter à la liste:Adicionar à Lista:Zur Liste hinzufügen',
+    'removeFromList:Listeden Çıkar:Remove from List:Quitar de Lista:Retirer de la liste:Remover da Lista:Aus Liste entfernen',
+    'deleteList:Listeyi Sil:Delete List:Eliminar Lista:Supprimer la liste:Excluir Lista:Liste löschen',
+    'renameList:Listeyi Düzenle:Rename List:Renombrar Lista:Renommer la liste:Renomear Lista:Liste umbenennen',
+    'emptyList:Bu liste boş.:This list is empty.:Esta lista está vacía.:Cette liste est vide.:Esta lista está vazia.:Diese Liste ist leer.',
+    'noLists:Henüz liste oluşturulmadı.:No lists created yet.:Aún no se han creado listas.:Aucune liste créée.:Nenhuma lista criada ainda.:Noch keine Listen erstellt.',
+    'deleteListConfirm:Bu listeyi silmek istediğinize emin misiniz?:Are you sure you want to delete this list?:¿Seguro que quieres eliminar esta lista?:Êtes-vous sûr de vouloir supprimer cette liste ?:Tem certeza que deseja excluir esta lista?:Sind Sie sicher, dass Sie diese Liste löschen möchten?',
+    'suggestedListNames:Önerilen İsimler:Suggested Names:Nombres Sugeridos:Noms suggérés:Nomes Sugeridos:Vorgeschlagene Namen',
+    'addMovieToList:Listeye Film Ekle:Add Movie to List:Añadir a lista:Ajouter à la liste:Adicionar à Lista:Zur Liste hinzufügen',
+    'manageListMembership:Listeleri Yönet:Manage Lists:Gestionar Listas:Gérer les listes:Gerenciar Listas:Listen verwalten',
   ];
 
   static String tr(String key) {

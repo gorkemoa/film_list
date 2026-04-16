@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/movie.dart';
+import '../models/watch_status.dart';
 import '../models/search_cache.dart';
 import 'dart:convert';
 import '../core/database/local_db.dart';
@@ -125,7 +126,6 @@ class AddMovieViewModel extends ChangeNotifier {
               year: c.year,
               genre: '', // Genre is now enriched during search and stored separately in local DB if saved
               posterUrl: c.poster,
-              isWatched: false,
               createdAt: c.createdAt,
               updatedAt: c.createdAt,
             ),
@@ -201,7 +201,7 @@ class AddMovieViewModel extends ChangeNotifier {
       final finalMovie = detailedMovie.copyWith(
         id: const Uuid().v4(),
         posterLocalPath: localPosterPath,
-        isWatched: false,
+        watchStatus: WatchStatus.toWatch,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );

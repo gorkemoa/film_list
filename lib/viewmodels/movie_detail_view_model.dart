@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/movie.dart';
 import '../models/review.dart';
+import '../models/watch_status.dart';
 import '../services/movie_cache_service.dart';
 import '../services/review_service.dart';
 import '../services/translation_service.dart';
@@ -90,6 +91,12 @@ class MovieDetailViewModel extends ChangeNotifier {
       }
 
       currentReview = await _reviewService.getReviewByMovieId(currentMovie!.id);
+
+      // Record last viewed timestamp for local movies
+      if (isLocal && currentMovie != null) {
+        currentMovie = currentMovie!.copyWith(lastViewedAt: DateTime.now());
+        await _movieCacheService.updateMovie(currentMovie!);
+      }
     } catch (e) {
       errorMessage = e.toString();
       Logger.error('MovieDetailViewModel init error', e);
@@ -99,21 +106,37 @@ class MovieDetailViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> updateWatchStatus(WatchStatus status) async {
+    try {
+      if (currentMovie == null) return;
+      int newWatchCount = currentMovie!.watchCount;
+      if (status == WatchStatus.watched && newWatchCount == 0) {
+        newWatchCount = 1;
+      }
+      currentMovie = currentMovie!.copyWith(
+        watchStatus: status,
+        watchCount: newWatchCount,
+      );
+      await _movieCacheService.updateMovie(currentMovie!);
+      notifyListeners();
+    } catch (e) {
+      errorMessage = e.toString();
+      notifyListeners();
+    }
+  }
+
   Future<void> toggleWatched(Movie movie) async {
     try {
       if (currentMovie != null) {
-        final newIsWatched = !currentMovie!.isWatched;
+        final newStatus = currentMovie!.isWatched
+            ? WatchStatus.toWatch
+            : WatchStatus.watched;
         int newWatchCount = currentMovie!.watchCount;
-
-        if (newIsWatched && newWatchCount == 0) {
+        if (newStatus == WatchStatus.watched && newWatchCount == 0) {
           newWatchCount = 1;
-        } else if (!newIsWatched) {
-          newWatchCount =
-              0; // Or keep it if we want to remember past watches, but typically 0 if unwatched
         }
-
         currentMovie = currentMovie!.copyWith(
-          isWatched: newIsWatched,
+          watchStatus: newStatus,
           watchCount: newWatchCount,
         );
         await _movieCacheService.updateMovie(currentMovie!);
