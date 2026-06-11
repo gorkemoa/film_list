@@ -2,19 +2,13 @@ import 'package:flutter/foundation.dart';
 import '../models/movie.dart';
 import '../models/watch_status.dart';
 import '../services/movie_cache_service.dart';
-import '../services/discovery_service.dart';
 import '../core/utils/logger.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final MovieCacheService _movieCacheService;
-  final DiscoveryService _discoveryService;
 
-  HomeViewModel({
-    MovieCacheService? movieCacheService,
-    DiscoveryService? discoveryService,
-  }) : _movieCacheService = movieCacheService ?? MovieCacheService(),
-       _discoveryService = discoveryService ??
-           DiscoveryService(movieCacheService: movieCacheService);
+  HomeViewModel({MovieCacheService? movieCacheService})
+    : _movieCacheService = movieCacheService ?? MovieCacheService();
 
   bool isLoading = false;
   String? errorMessage;
@@ -40,11 +34,6 @@ class HomeViewModel extends ChangeNotifier {
       return rating >= 8.0;
     }).toList();
 
-    if (recs.isEmpty && _suggestions.isNotEmpty) {
-      // Use suggestions that aren't already in the slider (slider takes up to 5)
-      return _suggestions.skip(movies.isEmpty ? 5 : 3).take(10).toList();
-    }
-
     recs.sort((a, b) {
       final rA = double.tryParse(a.imdbRating ?? '0') ?? 0.0;
       final rB = double.tryParse(b.imdbRating ?? '0') ?? 0.0;
@@ -54,34 +43,16 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   List<Movie> get sliderMovies {
-    // Priority: Combinining "To Watch" (unwatched in local DB) and "Suggestions"
     final localToWatch = movies.where((m) => !m.isWatched).toList();
-
-    List<Movie> combined = [];
-
-    // Add up to 3 local "To Watch" movies (prioritize newest)
+    final combined = <Movie>[];
     combined.addAll(localToWatch.reversed.take(3));
 
-    // Add up to 3 high-rated suggestions from DiscoveryService
-    // These are already sorted or representative
-    if (_suggestions.isNotEmpty) {
-      combined.addAll(_suggestions.take(3));
-    }
-
-    // fallback if still too short and we have local movies
     if (combined.isEmpty && movies.isNotEmpty) {
-      combined = movies.reversed.take(5).toList();
+      combined.addAll(movies.reversed.take(5));
     }
 
-    // fallback for empty case (initial state)
-    if (combined.isEmpty && _suggestions.isNotEmpty) {
-      combined = _suggestions.take(5).toList();
-    }
-
-    return combined.toSet().toList(); // Ensure unique movies
+    return combined.toSet().toList();
   }
-
-  List<Movie> _suggestions = [];
 
   List<Movie> get latestMovies => movies.reversed.toList();
 
@@ -119,7 +90,6 @@ class HomeViewModel extends ChangeNotifier {
 
     try {
       movies = await _movieCacheService.getAllMovies();
-      _suggestions = await _discoveryService.getSuggestions();
     } catch (e) {
       errorMessage = e.toString();
       Logger.error('HomeViewModel init error', e);
@@ -151,7 +121,9 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> toggleWatched(Movie movie) async {
     try {
-      final newStatus = movie.isWatched ? WatchStatus.toWatch : WatchStatus.watched;
+      final newStatus = movie.isWatched
+          ? WatchStatus.toWatch
+          : WatchStatus.watched;
       final updated = movie.copyWith(watchStatus: newStatus);
       await _movieCacheService.updateMovie(updated);
       await init();
@@ -167,7 +139,10 @@ class HomeViewModel extends ChangeNotifier {
       if (status == WatchStatus.watched && movie.watchCount == 0) {
         newWatchCount = 1;
       }
-      final updated = movie.copyWith(watchStatus: status, watchCount: newWatchCount);
+      final updated = movie.copyWith(
+        watchStatus: status,
+        watchCount: newWatchCount,
+      );
       await _movieCacheService.updateMovie(updated);
       await init();
     } catch (e) {

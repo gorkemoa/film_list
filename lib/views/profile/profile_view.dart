@@ -104,9 +104,7 @@ class ProfileView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: Text(Translations.tr('settings')),
-      ),
+      appBar: AppBar(title: Text(Translations.tr('settings'))),
       body: Consumer<ProfileViewModel>(
         builder: (context, viewModel, child) {
           return SingleChildScrollView(

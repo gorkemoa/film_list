@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:film_list/app/app_theme.dart';
+import 'package:film_list/views/home/widgets/ad_banner_widget.dart';
 import 'package:film_list/views/home/widgets/add_poster_widget.dart';
 import 'package:film_list/views/home/widgets/slider_widget.dart';
 import 'package:film_list/views/widgets/custom_poster_widget.dart';
@@ -13,8 +14,8 @@ import '../../viewmodels/home_view_model.dart';
 import '../add_movie/add_movie_view.dart';
 import '../movie_detail/movie_detail_view.dart';
 import 'widgets/watch_status_badge_widget.dart';
-import '../lists/lists_view.dart';
 import '../discovery/discovery_view.dart';
+import '../lists/lists_view.dart';
 import '../stats/stats_view.dart';
 import '../profile/profile_view.dart';
 
@@ -26,7 +27,28 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
+  static const String _homeAdUnitId = 'ca-app-pub-3600325889588673/6060879999';
+  static const String _discoveryAdUnitId =
+      'ca-app-pub-3600325889588673/2584669411';
+  static const String _listsAdUnitId = 'ca-app-pub-3600325889588673/7030010020';
+
   int _currentIndex = 0;
+
+  double get _posterWidth => SizeConfig.relativeSize(112);
+  double get _posterHeight => SizeConfig.relativeSize(170);
+
+  String? get _currentBannerAdUnitId {
+    if (_currentIndex == 0) return _homeAdUnitId;
+    if (_currentIndex == 1) return _discoveryAdUnitId;
+    if (_currentIndex == 3) return _listsAdUnitId;
+    return null;
+  }
+
+  String get _currentBannerPlacementName {
+    if (_currentIndex == 1) return 'Discovery';
+    if (_currentIndex == 3) return 'Lists';
+    return 'Home';
+  }
 
   @override
   void initState() {
@@ -51,18 +73,19 @@ class _HomeViewState extends State<HomeView> {
         Padding(
           padding: EdgeInsets.symmetric(
             horizontal: SizeTokens.paddingMedium,
-            vertical: SizeTokens.paddingSmall,
+            vertical: SizeTokens.paddingMin,
           ),
           child: Text(
             title,
             style: TextStyle(
-              fontSize: SizeTokens.textTitle,
-              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimaryColor,
+              fontSize: SizeTokens.textLarge,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
         SizedBox(
-          height: SizeConfig.relativeSize(200),
+          height: _posterHeight,
           child: list.isEmpty
               ? Padding(
                   padding: EdgeInsets.symmetric(
@@ -81,7 +104,7 @@ class _HomeViewState extends State<HomeView> {
                   itemBuilder: (context, index) {
                     final movie = list[index];
                     return Padding(
-                      padding: EdgeInsets.only(right: SizeTokens.paddingMedium),
+                      padding: EdgeInsets.only(right: SizeTokens.paddingSmall),
                       child: InkWell(
                         borderRadius: SizeTokens.circularRadiusSmall,
                         onTap: () {
@@ -102,7 +125,8 @@ class _HomeViewState extends State<HomeView> {
                               child: movie.posterLocalPath != null
                                   ? Image.file(
                                       File(movie.posterLocalPath!),
-                                      width: SizeConfig.relativeSize(130),
+                                      width: _posterWidth,
+                                      height: _posterHeight,
                                       fit: BoxFit.cover,
                                       cacheWidth: 300,
                                       cacheHeight: 444,
@@ -110,16 +134,16 @@ class _HomeViewState extends State<HomeView> {
                                           (context, error, stackTrace) =>
                                               CustomPosterWidget(
                                                 movie: movie,
-                                                width: SizeConfig.relativeSize(
-                                                  130,
-                                                ),
+                                                width: _posterWidth,
+                                                height: _posterHeight,
                                               ),
                                     )
                                   : (movie.posterUrl != null &&
                                         movie.posterUrl != 'N/A')
                                   ? Image.network(
                                       movie.posterUrl!,
-                                      width: SizeConfig.relativeSize(130),
+                                      width: _posterWidth,
+                                      height: _posterHeight,
                                       fit: BoxFit.cover,
                                       cacheWidth: 300,
                                       cacheHeight: 444,
@@ -127,19 +151,19 @@ class _HomeViewState extends State<HomeView> {
                                           (context, error, stackTrace) =>
                                               CustomPosterWidget(
                                                 movie: movie,
-                                                width: SizeConfig.relativeSize(
-                                                  130,
-                                                ),
+                                                width: _posterWidth,
+                                                height: _posterHeight,
                                               ),
                                     )
                                   : CustomPosterWidget(
                                       movie: movie,
-                                      width: SizeConfig.relativeSize(130),
+                                      width: _posterWidth,
+                                      height: _posterHeight,
                                     ),
                             ),
                             Positioned(
-                              top: 6,
-                              left: 6,
+                              top: SizeTokens.paddingMin,
+                              left: SizeTokens.paddingMin,
                               child: WatchStatusBadge(
                                 status: movie.watchStatus,
                               ),
@@ -151,7 +175,7 @@ class _HomeViewState extends State<HomeView> {
                   },
                 ),
         ),
-        SizedBox(height: SizeTokens.paddingLarge),
+        SizedBox(height: SizeTokens.paddingMedium),
       ],
     );
   }
@@ -180,7 +204,7 @@ class _HomeViewState extends State<HomeView> {
         children: [
           if (viewModel.sliderMovies.isNotEmpty)
             SliderWidget(movies: viewModel.sliderMovies),
-          SizedBox(height: SizeTokens.paddingLarge),
+          SizedBox(height: SizeTokens.paddingMedium),
           // Currently Watching
           if (viewModel.watchingMovies.isNotEmpty)
             _buildHorizontalList(
@@ -220,80 +244,9 @@ class _HomeViewState extends State<HomeView> {
               viewModel.rewatchMovies,
               viewModel,
             ),
-          SizedBox(height: SizeConfig.relativeSize(80)),
+          SizedBox(height: SizeConfig.relativeSize(64)),
         ],
       ),
-    );
-  }
-
-  Widget _buildMovieListTab(
-    BuildContext context,
-    HomeViewModel viewModel,
-    List<Movie> movies,
-  ) {
-    if (movies.isEmpty) {
-      return Center(
-        child: Text(
-          Translations.tr('emptyMovies'),
-          style: TextStyle(
-            fontSize: SizeTokens.textLarge,
-            color: AppTheme.textSecondaryColor,
-          ),
-        ),
-      );
-    }
-    return GridView.builder(
-      padding: EdgeInsets.all(SizeTokens.paddingMedium),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 0.65,
-        crossAxisSpacing: SizeTokens.paddingMedium,
-        mainAxisSpacing: SizeTokens.paddingMedium,
-      ),
-      itemCount: movies.length,
-      itemBuilder: (context, index) {
-        final movie = movies[index];
-        return InkWell(
-          borderRadius: SizeTokens.circularRadiusSmall,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => MovieDetailView(movie: movie)),
-            ).then((_) {
-              if (!context.mounted) return;
-              viewModel.init();
-            });
-          },
-          child: ClipRRect(
-            borderRadius: SizeTokens.circularRadiusSmall,
-            child: movie.posterLocalPath != null
-                ? Image.file(
-                    File(movie.posterLocalPath!),
-                    fit: BoxFit.cover,
-                    cacheWidth: 300,
-                    cacheHeight: 444,
-                    errorBuilder: (context, error, stackTrace) =>
-                        CustomPosterWidget(
-                          movie: movie,
-                          width: double.infinity,
-                        ),
-                  )
-                : (movie.posterUrl != null && movie.posterUrl != 'N/A')
-                ? Image.network(
-                    movie.posterUrl!,
-                    fit: BoxFit.cover,
-                    cacheWidth: 300,
-                    cacheHeight: 444,
-                    errorBuilder: (context, error, stackTrace) =>
-                        CustomPosterWidget(
-                          movie: movie,
-                          width: double.infinity,
-                        ),
-                  )
-                : CustomPosterWidget(movie: movie, width: double.infinity),
-          ),
-        );
-      },
     );
   }
 
@@ -310,9 +263,13 @@ class _HomeViewState extends State<HomeView> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
+        toolbarHeight: SizeTokens.heightMedium,
         title: Text(
           appBarTitle ?? 'FilmList',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: SizeTokens.textLarge,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         actions: [
           IconButton(
@@ -324,7 +281,7 @@ class _HomeViewState extends State<HomeView> {
             },
             icon: const Icon(Icons.settings_outlined),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: SizeTokens.paddingSmall),
         ],
       ),
       body: Consumer<HomeViewModel>(
@@ -354,78 +311,120 @@ class _HomeViewState extends State<HomeView> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'home_fab',
-        onPressed: () => setState(() => _currentIndex = 2),
-        backgroundColor: AppTheme.primaryColor,
-        elevation: 8,
-        shape: const CircleBorder(),
-        child: Icon(Icons.add, color: Colors.white, size: SizeTokens.iconLarge),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8.0,
-        color: AppTheme.surfaceColor,
-        padding: EdgeInsets.zero,
-        child: Row(
-          children: [
-            _buildNavItem(0, Icons.home_rounded, 'homeTab'),
-            _buildNavItem(1, Icons.explore_rounded, 'discoveryTab'),
-            const SizedBox(width: 40),
-            _buildNavItem(3, Icons.playlist_play_rounded, 'listsTab'),
-            _buildNavItem(4, Icons.insights_rounded, 'statsTab'),
-          ],
-        ),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_currentBannerAdUnitId != null)
+            AdBannerWidget(
+              key: ValueKey(_currentBannerAdUnitId),
+              adUnitId: _currentBannerAdUnitId!,
+              placementName: _currentBannerPlacementName,
+            ),
+          BottomAppBar(
+            height: SizeConfig.relativeSize(50),
+            color: AppTheme.surfaceColor,
+            padding: EdgeInsets.zero,
+            child: SizedBox.expand(
+              child: Row(
+                children: [
+                  _buildNavItem(0, Icons.home_rounded, 'homeTab'),
+                  _buildNavItem(1, Icons.explore_rounded, 'discoveryTab'),
+                  _buildNavItem(2, Icons.add_circle_rounded, 'addTab'),
+                  _buildNavItem(3, Icons.playlist_play_rounded, 'listsTab'),
+                  _buildNavItem(4, Icons.insights_rounded, 'statsTab'),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildNavItem(int index, IconData icon, String labelKey) {
     final isSelected = _currentIndex == index;
+    final isAddItem = index == 2;
     return Expanded(
       child: GestureDetector(
         onTap: () => setState(() => _currentIndex = index),
         behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppTheme.primaryColor.withValues(alpha: 0.15)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
+        child: Transform.translate(
+          offset: Offset(0, isAddItem ? 0 : SizeTokens.paddingMin),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isAddItem
+                      ? SizeTokens.paddingMedium
+                      : SizeTokens.paddingSmall,
+                  vertical: SizeTokens.paddingMin,
+                ),
+                decoration: BoxDecoration(
+                  gradient: isAddItem
+                      ? LinearGradient(
+                          colors: [AppTheme.primaryColor, AppTheme.primaryDark],
+                        )
+                      : null,
+                  color: isAddItem
+                      ? null
+                      : isSelected
+                      ? AppTheme.primaryColor.withValues(alpha: 0.15)
+                      : Colors.transparent,
+                  borderRadius: SizeTokens.circularRadiusLarge,
+                  boxShadow: isAddItem
+                      ? [
+                          BoxShadow(
+                            color: AppTheme.primaryColor.withValues(
+                              alpha: 0.28,
+                            ),
+                            blurRadius: SizeTokens.radiusMedium,
+                            spreadRadius: SizeTokens.paddingMin / 2,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Icon(
+                  icon,
+                  color: isAddItem
+                      ? Colors.white
+                      : isSelected
+                      ? AppTheme.primaryColor
+                      : AppTheme.textSecondaryColor,
+                  size: isAddItem
+                      ? SizeConfig.relativeSize(20)
+                      : SizeConfig.relativeSize(18),
+                ),
               ),
-              child: Icon(
-                icon,
-                color: isSelected
-                    ? AppTheme.primaryColor
-                    : AppTheme.textSecondaryColor,
-                size: SizeTokens.iconMedium,
+              SizedBox(
+                height: isAddItem
+                    ? SizeTokens.paddingMin / 2
+                    : SizeTokens.paddingMin,
               ),
-            ),
-            const SizedBox(height: 3),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                color: isSelected
-                    ? AppTheme.primaryColor
-                    : AppTheme.textSecondaryColor,
-                fontSize: SizeTokens.textSmall,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: TextStyle(
+                  color: isAddItem
+                      ? AppTheme.textPrimaryColor
+                      : isSelected
+                      ? AppTheme.primaryColor
+                      : AppTheme.textSecondaryColor,
+                  fontSize: SizeTokens.textSmall,
+                  fontWeight: isAddItem || isSelected
+                      ? FontWeight.w700
+                      : FontWeight.normal,
+                ),
+                child: Text(
+                  Translations.tr(labelKey),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              child: Text(
-                Translations.tr(labelKey),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

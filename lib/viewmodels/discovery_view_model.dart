@@ -1,139 +1,87 @@
 import 'package:flutter/foundation.dart';
-import '../models/discovery_preference.dart';
-import '../services/discovery_service.dart';
 
-enum DiscoveryMode { idle, quiz, category }
-
-enum DiscoveryState { idle, loading, success, error }
+import '../core/utils/logger.dart';
+import '../models/movie.dart';
+import '../services/discovery_catalog_service.dart';
 
 class DiscoveryViewModel extends ChangeNotifier {
-  final DiscoveryService _discoveryService;
+  DiscoveryViewModel({DiscoveryCatalogService? discoveryCatalogService})
+    : _discoveryCatalogService =
+          discoveryCatalogService ?? DiscoveryCatalogService();
 
-  DiscoveryViewModel({DiscoveryService? discoveryService})
-      : _discoveryService = discoveryService ?? DiscoveryService();
+  static const int _pageSize = 18;
 
-  // ── State ──────────────────────────────────────────────
-  DiscoveryMode mode = DiscoveryMode.idle;
-  DiscoveryState state = DiscoveryState.idle;
+  final DiscoveryCatalogService _discoveryCatalogService;
+
+  DiscoveryCatalogFilter filter = DiscoveryCatalogFilter.all;
+  bool isLoading = false;
+  bool isLoadingMore = false;
+  bool hasMore = true;
   String? errorMessage;
-  List<DiscoveryResult> results = [];
+  List<Movie> movies = [];
 
-  // ── Quiz answers ───────────────────────────────────────
-  String selectedMood = '';
-  String selectedGenre = '';
-  String selectedDuration = 'any';
-  String selectedViewingContext = 'solo';
-  String selectedEra = 'any';
+  int _offset = 0;
 
-  // ── Selected category ──────────────────────────────────
-  String selectedCategoryKey = '';
-
-  // ── Init ───────────────────────────────────────────────
   Future<void> init() async {
-    // Discovery screen is opt-in: no auto-load on open
+    if (movies.isNotEmpty || isLoading) return;
+    await refresh();
   }
 
-  // ── Quiz setters ───────────────────────────────────────
-  void setMood(String mood) {
-    selectedMood = mood;
-    notifyListeners();
-  }
-
-  void setGenre(String genre) {
-    selectedGenre = genre;
-    notifyListeners();
-  }
-
-  void setDuration(String duration) {
-    selectedDuration = duration;
-    notifyListeners();
-  }
-
-  void setViewingContext(String ctx) {
-    selectedViewingContext = ctx;
-    notifyListeners();
-  }
-
-  void setEra(String era) {
-    selectedEra = era;
-    notifyListeners();
-  }
-
-  // ── Actions ────────────────────────────────────────────
-  Future<void> fetchFromQuiz() async {
-    if (selectedMood.isEmpty || selectedGenre.isEmpty) return;
-
-    mode = DiscoveryMode.quiz;
-    state = DiscoveryState.loading;
+  Future<void> refresh() async {
+    isLoading = true;
+    isLoadingMore = false;
     errorMessage = null;
-    results = [];
+    hasMore = true;
+    _offset = 0;
+    movies = [];
     notifyListeners();
 
     try {
-      final pref = DiscoveryPreference(
-        mood: selectedMood,
-        genre: selectedGenre,
-        duration: selectedDuration,
-        viewingContext: selectedViewingContext,
-        era: selectedEra,
+      final page = await _discoveryCatalogService.fetchPage(
+        filter: filter,
+        offset: _offset,
+        limit: _pageSize,
       );
-      final fetched = await _discoveryService.suggestFromPreference(pref);
-      results = fetched;
-      state = fetched.isEmpty
-          ? DiscoveryState.error
-          : DiscoveryState.success;
-      if (fetched.isEmpty) {
-        errorMessage = 'noResults';
-      }
-    } catch (_) {
-      state = DiscoveryState.error;
-      errorMessage = 'errorOccurred';
+      movies = page.movies;
+      _offset = page.nextOffset;
+      hasMore = page.hasMore;
+    } catch (e, st) {
+      errorMessage = e.toString();
+      Logger.error('DiscoveryViewModel refresh failed', e, st);
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
-  Future<void> fetchFromCategory(String categoryKey) async {
-    selectedCategoryKey = categoryKey;
-    mode = DiscoveryMode.category;
-    state = DiscoveryState.loading;
+  Future<void> loadMore() async {
+    if (isLoading || isLoadingMore || !hasMore) return;
+
+    isLoadingMore = true;
     errorMessage = null;
-    results = [];
     notifyListeners();
 
     try {
-      final fetched = await _discoveryService.suggestFromCategory(categoryKey);
-      results = fetched;
-      state = fetched.isEmpty
-          ? DiscoveryState.error
-          : DiscoveryState.success;
-      if (fetched.isEmpty) {
-        errorMessage = 'noResults';
-      }
-    } catch (_) {
-      state = DiscoveryState.error;
-      errorMessage = 'errorOccurred';
+      final page = await _discoveryCatalogService.fetchPage(
+        filter: filter,
+        offset: _offset,
+        limit: _pageSize,
+      );
+      movies = [...movies, ...page.movies];
+      _offset = page.nextOffset;
+      hasMore = page.hasMore;
+    } catch (e, st) {
+      errorMessage = e.toString();
+      Logger.error('DiscoveryViewModel loadMore failed', e, st);
+    } finally {
+      isLoadingMore = false;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
-  void reset() {
-    mode = DiscoveryMode.idle;
-    state = DiscoveryState.idle;
-    errorMessage = null;
-    results = [];
-    selectedMood = '';
-    selectedGenre = '';
-    selectedDuration = 'any';
-    selectedViewingContext = 'solo';
-    selectedEra = 'any';
-    selectedCategoryKey = '';
-    notifyListeners();
+  Future<void> setFilter(DiscoveryCatalogFilter nextFilter) async {
+    if (filter == nextFilter) return;
+    filter = nextFilter;
+    await refresh();
   }
-
-  bool get isLoading => state == DiscoveryState.loading;
-  bool get hasResults => state == DiscoveryState.success && results.isNotEmpty;
-  bool get hasError => state == DiscoveryState.error;
-  bool get isIdle => state == DiscoveryState.idle;
-
-  bool get quizIsReady => selectedMood.isNotEmpty && selectedGenre.isNotEmpty;
 }

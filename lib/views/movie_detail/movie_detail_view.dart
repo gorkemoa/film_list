@@ -6,10 +6,12 @@ import '../../core/responsive/size_config.dart';
 import '../../core/responsive/size_tokens.dart';
 import '../../models/movie.dart';
 import '../../models/review.dart';
+import '../../viewmodels/custom_list_view_model.dart';
 import '../../viewmodels/movie_detail_view_model.dart';
 import '../widgets/custom_poster_widget.dart';
 import '../../app/app_theme.dart';
 import '../home/widgets/watch_status_badge_widget.dart';
+import '../home/widgets/ad_banner_widget.dart';
 
 class MovieDetailView extends StatefulWidget {
   final Movie movie;
@@ -21,6 +23,9 @@ class MovieDetailView extends StatefulWidget {
 }
 
 class _MovieDetailViewState extends State<MovieDetailView> {
+  static const String _detailAdUnitId =
+      'ca-app-pub-3600325889588673/6416103214';
+
   int storyRating = 1;
   int musicRating = 1;
   int actingRating = 1;
@@ -109,6 +114,254 @@ class _MovieDetailViewState extends State<MovieDetailView> {
         await context.read<MovieDetailViewModel>().deleteReview();
       }
     }
+  }
+
+  Future<void> _showAddToListSheet(MovieDetailViewModel detailVm) async {
+    final listVm = context.read<CustomListViewModel>();
+    await listVm.init();
+    if (!mounted) return;
+
+    final controller = TextEditingController();
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.surfaceColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(SizeTokens.radiusMedium),
+        ),
+      ),
+      builder: (sheetContext) {
+        return ChangeNotifierProvider.value(
+          value: listVm,
+          child: Consumer<CustomListViewModel>(
+            builder: (context, customListVm, child) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  left: SizeTokens.paddingMedium,
+                  right: SizeTokens.paddingMedium,
+                  top: SizeTokens.paddingLarge,
+                  bottom:
+                      MediaQuery.of(sheetContext).viewInsets.bottom +
+                      SizeTokens.paddingLarge,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      Translations.tr('addToCustomList'),
+                      style: TextStyle(
+                        color: AppTheme.textPrimaryColor,
+                        fontSize: SizeTokens.textLarge,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(height: SizeTokens.paddingMedium),
+                    if (customListVm.lists.isEmpty)
+                      _buildCreateAndAddListForm(
+                        sheetContext,
+                        controller,
+                        detailVm,
+                        customListVm,
+                      )
+                    else
+                      Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: customListVm.lists.length,
+                          separatorBuilder: (_, _) =>
+                              SizedBox(height: SizeTokens.paddingSmall),
+                          itemBuilder: (context, index) {
+                            final list = customListVm.lists[index];
+                            final movieId = detailVm.currentMovie?.id ?? '';
+                            final isInList = customListVm.isMovieInList(
+                              list.id,
+                              movieId,
+                            );
+
+                            return ListTile(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: SizeTokens.paddingMedium,
+                                vertical: SizeTokens.paddingMin,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: SizeTokens.circularRadiusSmall,
+                              ),
+                              tileColor: AppTheme.surfaceLightColor,
+                              leading: Icon(
+                                isInList
+                                    ? Icons.check_circle_rounded
+                                    : Icons.playlist_add_rounded,
+                                color: isInList
+                                    ? const Color(0xFF4CAF50)
+                                    : AppTheme.primaryColor,
+                              ),
+                              title: Text(
+                                list.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppTheme.textPrimaryColor,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '${list.movieIds.length} ${Translations.tr('items')}',
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondaryColor,
+                                ),
+                              ),
+                              onTap: isInList
+                                  ? null
+                                  : () => _addCurrentMovieToList(
+                                      sheetContext,
+                                      detailVm,
+                                      customListVm,
+                                      list.id,
+                                    ),
+                            );
+                          },
+                        ),
+                      ),
+                    if (customListVm.lists.isNotEmpty) ...[
+                      SizedBox(height: SizeTokens.paddingMedium),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(sheetContext);
+                          _showCreateAndAddSheet(detailVm);
+                        },
+                        icon: const Icon(Icons.add_rounded),
+                        label: Text(Translations.tr('createList')),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+
+    controller.dispose();
+  }
+
+  Future<void> _showCreateAndAddSheet(MovieDetailViewModel detailVm) async {
+    final listVm = context.read<CustomListViewModel>();
+    final controller = TextEditingController();
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.surfaceColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(SizeTokens.radiusMedium),
+        ),
+      ),
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: SizeTokens.paddingMedium,
+            right: SizeTokens.paddingMedium,
+            top: SizeTokens.paddingLarge,
+            bottom:
+                MediaQuery.of(sheetContext).viewInsets.bottom +
+                SizeTokens.paddingLarge,
+          ),
+          child: _buildCreateAndAddListForm(
+            sheetContext,
+            controller,
+            detailVm,
+            listVm,
+          ),
+        );
+      },
+    );
+
+    controller.dispose();
+  }
+
+  Widget _buildCreateAndAddListForm(
+    BuildContext sheetContext,
+    TextEditingController controller,
+    MovieDetailViewModel detailVm,
+    CustomListViewModel customListVm,
+  ) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: controller,
+          autofocus: true,
+          style: const TextStyle(color: AppTheme.textPrimaryColor),
+          decoration: InputDecoration(
+            hintText: Translations.tr('listNameHint'),
+            hintStyle: const TextStyle(color: AppTheme.textSecondaryColor),
+            filled: true,
+            fillColor: AppTheme.surfaceLightColor,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(SizeTokens.radiusSmall),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        SizedBox(height: SizeTokens.paddingMedium),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () async {
+              final name = controller.text.trim();
+              if (name.isEmpty) return;
+
+              await customListVm.createList(name);
+              if (customListVm.lists.isEmpty) return;
+              final createdList = customListVm.lists.first;
+              if (!sheetContext.mounted) return;
+              await _addCurrentMovieToList(
+                sheetContext,
+                detailVm,
+                customListVm,
+                createdList.id,
+              );
+            },
+            icon: const Icon(Icons.add_rounded),
+            label: Text(Translations.tr('createList')),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: SizeTokens.paddingMedium),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _addCurrentMovieToList(
+    BuildContext sheetContext,
+    MovieDetailViewModel detailVm,
+    CustomListViewModel customListVm,
+    String listId,
+  ) async {
+    if (!detailVm.isLocal) {
+      await detailVm.addMovieToLocalList();
+    }
+
+    final movie = detailVm.currentMovie;
+    if (movie == null) return;
+
+    await customListVm.addMovieToList(listId, movie.id);
+    if (!sheetContext.mounted) return;
+    Navigator.pop(sheetContext);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(Translations.tr('addToCustomList'))));
   }
 
   Widget _buildSliverBackground(BuildContext context, Movie movie) {
@@ -363,6 +616,13 @@ class _MovieDetailViewState extends State<MovieDetailView> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Center(
+                  child: AdBannerWidget(
+                    adUnitId: _detailAdUnitId,
+                    placementName: 'Movie detail',
+                  ),
+                ),
+                SizedBox(height: SizeTokens.paddingMedium),
                 Text(
                   Translations.tr('movieInfoTab'),
                   style: TextStyle(
@@ -466,6 +726,27 @@ class _MovieDetailViewState extends State<MovieDetailView> {
                             movie.imdbRating ?? 'N/A',
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _showAddToListSheet(viewModel),
+                          icon: const Icon(Icons.playlist_add_rounded),
+                          label: Text(Translations.tr('addToCustomList')),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.textPrimaryColor,
+                            side: BorderSide(
+                              color: AppTheme.primaryColor.withValues(
+                                alpha: 0.7,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 24),
 
@@ -634,10 +915,24 @@ class _MovieDetailViewState extends State<MovieDetailView> {
                                           ),
                                           child: Text(
                                             isHigher
-                                                ? Translations.tr('ratingHigher').replaceFirst('{diff}', diff.abs().toStringAsFixed(1))
+                                                ? Translations.tr(
+                                                    'ratingHigher',
+                                                  ).replaceFirst(
+                                                    '{diff}',
+                                                    diff.abs().toStringAsFixed(
+                                                      1,
+                                                    ),
+                                                  )
                                                 : diff == 0
                                                 ? Translations.tr('ratingMatch')
-                                                : Translations.tr('ratingLower').replaceFirst('{diff}', diff.abs().toStringAsFixed(1)),
+                                                : Translations.tr(
+                                                    'ratingLower',
+                                                  ).replaceFirst(
+                                                    '{diff}',
+                                                    diff.abs().toStringAsFixed(
+                                                      1,
+                                                    ),
+                                                  ),
                                             style: TextStyle(
                                               color: isHigher
                                                   ? Colors.green
@@ -795,7 +1090,7 @@ class _MovieDetailViewState extends State<MovieDetailView> {
                                       filled: true,
                                       fillColor: AppTheme.surfaceLightColor
                                           .withOpacity(0.2),
-                                      hintText: '...',
+                                      hintText: Translations.tr('commentHint'),
                                       hintStyle: const TextStyle(
                                         color: Colors.grey,
                                       ),
@@ -836,24 +1131,6 @@ class _MovieDetailViewState extends State<MovieDetailView> {
                             const SizedBox(height: 24),
                           ],
                         ],
-                      ] else ...[
-                        // Suggested view: Show add button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: viewModel.addMovieToLocalList,
-                            icon: const Icon(Icons.add),
-                            label: Text(Translations.tr('addToList')),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primaryColor,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
                       ],
 
                       // Layout logic: Plot/Info at bottom

@@ -50,7 +50,7 @@ class _CustomAddMovieViewState extends State<CustomAddMovieView> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${movie.title} ${Translations.tr('saveCustom')}!'),
+              content: Text('${movie.title} ${Translations.tr('saved')}'),
             ),
           );
           // Refresh home view model so it appears in the lists
@@ -60,9 +60,9 @@ class _CustomAddMovieViewState extends State<CustomAddMovieView> {
       } catch (e, st) {
         Logger.error('Failed to save custom movie', e, st);
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${Translations.tr('errorPrefix')}: $e')),
+          );
         }
       }
     }

@@ -25,6 +25,8 @@ class _SliderWidgetState extends State<SliderWidget> {
   int _currentPage = 0;
   Timer? _timer;
 
+  double get _sliderHeight => SizeConfig.relativeHeight(46);
+
   @override
   void initState() {
     super.initState();
@@ -60,7 +62,7 @@ class _SliderWidgetState extends State<SliderWidget> {
     return Column(
       children: [
         SizedBox(
-          height: SizeConfig.relativeSize(500),
+          height: _sliderHeight,
           child: PageView.builder(
             controller: _pageController,
             onPageChanged: (index) {
@@ -75,168 +77,268 @@ class _SliderWidgetState extends State<SliderWidget> {
             },
           ),
         ),
-        SizedBox(height: SizeTokens.paddingSmall),
+        SizedBox(height: SizeTokens.paddingMin),
         _buildIndicator(),
       ],
     );
   }
 
   Widget _buildSlide(BuildContext context, Movie movie) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => MovieDetailView(movie: movie)),
-        ).then((_) {
-          if (!context.mounted) return;
-          context.read<HomeViewModel>().init();
-        });
-      },
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          SizedBox(
-            height: SizeConfig.relativeSize(500),
-            width: double.infinity,
-            child: movie.posterLocalPath != null
-                ? Image.file(
-                    File(movie.posterLocalPath!),
-                    fit: BoxFit.cover,
-                    cacheWidth: 800,
-                    cacheHeight: 1200,
-                    errorBuilder: (context, error, stackTrace) =>
-                        Container(color: AppTheme.surfaceLightColor),
-                  )
-                : (movie.posterUrl != null && movie.posterUrl != 'N/A')
-                ? Image.network(
-                    movie.posterUrl!,
-                    fit: BoxFit.fill,
-                    errorBuilder: (context, error, stackTrace) =>
-                        CustomPosterWidget(movie: movie),
-                  )
-                : CustomPosterWidget(movie: movie),
-          ),
-          // Gradient
-          Container(
-            height: SizeConfig.relativeSize(500),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.transparent, AppTheme.backgroundColor],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: [0.3, 1.0],
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: SizeTokens.paddingMedium),
+      child: InkWell(
+        borderRadius: SizeTokens.circularRadiusMedium,
+        onTap: () => _openDetail(context, movie),
+        child: ClipRRect(
+          borderRadius: SizeTokens.circularRadiusMedium,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _buildPoster(movie),
+              _buildGradientOverlay(),
+              Positioned(
+                left: SizeTokens.paddingMedium,
+                right: SizeTokens.paddingMedium,
+                bottom: SizeTokens.paddingMedium,
+                child: _buildNetflixContent(context, movie),
               ),
+              if (movie.id.startsWith('suggested_'))
+                Positioned(
+                  top: SizeTokens.paddingMedium,
+                  right: SizeTokens.paddingMedium,
+                  child: _buildSuggestedPill(),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPoster(Movie movie) {
+    if (movie.posterLocalPath != null) {
+      return Image.file(
+        File(movie.posterLocalPath!),
+        fit: BoxFit.cover,
+        cacheWidth: 800,
+        cacheHeight: 1200,
+        errorBuilder: (context, error, stackTrace) => CustomPosterWidget(
+          movie: movie,
+          width: double.infinity,
+          height: _sliderHeight,
+        ),
+      );
+    }
+
+    if (movie.posterUrl != null && movie.posterUrl != 'N/A') {
+      return Image.network(
+        movie.posterUrl!,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => CustomPosterWidget(
+          movie: movie,
+          width: double.infinity,
+          height: _sliderHeight,
+        ),
+      );
+    }
+
+    return CustomPosterWidget(
+      movie: movie,
+      width: double.infinity,
+      height: _sliderHeight,
+    );
+  }
+
+  Widget _buildGradientOverlay() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.black.withValues(alpha: 0.78),
+            Colors.black.withValues(alpha: 0.24),
+            AppTheme.backgroundColor.withValues(alpha: 0.92),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          stops: const [0.0, 0.48, 1.0],
+        ),
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.transparent,
+              AppTheme.backgroundColor.withValues(alpha: 0.96),
+            ],
+            begin: Alignment.center,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNetflixContent(BuildContext context, Movie movie) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            if (movie.imdbRating != null && movie.imdbRating != 'N/A') ...[
+              _buildRatingPill(movie.imdbRating!),
+              SizedBox(width: SizeTokens.paddingSmall),
+            ],
+            if (movie.type != null && movie.type!.isNotEmpty)
+              _buildTypePill(movie.type!),
+          ],
+        ),
+        SizedBox(height: SizeTokens.paddingSmall),
+        SizedBox(
+          width: SizeConfig.relativeWidth(78),
+          child: Text(
+            movie.title,
+            textAlign: TextAlign.start,
+            style: TextStyle(
+              color: AppTheme.textPrimaryColor,
+              fontSize: SizeTokens.textTitle * 1.18,
+              fontWeight: FontWeight.w900,
+              height: 1.02,
+              letterSpacing: -0.4,
+              shadows: const [Shadow(color: Colors.black, blurRadius: 6)],
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (movie.genre.isNotEmpty) ...[
+          SizedBox(height: SizeTokens.paddingSmall),
+          Text(
+            movie.genre.split(',').take(3).map((e) => e.trim()).join(' • '),
+            style: TextStyle(
+              color: AppTheme.textSecondaryColor,
+              fontSize: SizeTokens.textSmall,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+        SizedBox(height: SizeTokens.paddingMedium),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: AppTheme.primaryColor,
+            elevation: 0,
+            padding: EdgeInsets.symmetric(
+              horizontal: SizeTokens.paddingMedium,
+              vertical: SizeTokens.paddingSmall,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: SizeTokens.circularRadiusSmall,
             ),
           ),
-          // Content
-          Positioned(
-            bottom: SizeTokens.paddingMedium,
-            right: SizeTokens.paddingMedium,
-            child: movie.id.startsWith('suggested_')
-                ? Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: SizeTokens.paddingSmall,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(
-                        SizeTokens.radiusSmall,
-                      ),
-                    ),
-                    child: Text(
-                      Translations.tr('suggested'),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  )
-                : const SizedBox(),
+          onPressed: () => _openDetail(context, movie),
+          icon: Icon(Icons.info_outline, size: SizeTokens.iconSmall),
+          label: Text(
+            Translations.tr('details'),
+            style: TextStyle(
+              fontSize: SizeTokens.textSmall,
+              fontWeight: FontWeight.w800,
+            ),
           ),
-          Positioned(
-            bottom: SizeTokens.paddingLarge,
-            child: Column(
-              children: [
-                Container(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  alignment: Alignment.center,
-                  child: Text(
-                    movie.title,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: SizeTokens.textLarge * 1.5,
-                      fontWeight: FontWeight.bold,
-                      shadows: const [
-                        Shadow(color: Colors.black, blurRadius: 4),
-                      ],
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (movie.genre.isNotEmpty)
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: SizeTokens.paddingSmall,
-                    ),
-                    child: Text(
-                      movie.genre.split(',').take(3).join(' • '),
-                      style: TextStyle(
-                        color: AppTheme.textSecondaryColor,
-                        fontSize: SizeTokens.textMedium,
-                      ),
-                    ),
-                  ),
-                if (movie.imdbRating != null && movie.imdbRating != 'N/A')
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        movie.imdbRating!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                SizedBox(height: SizeTokens.paddingMedium),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    backgroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: SizeTokens.paddingLarge,
-                      vertical: SizeTokens.paddingMedium,
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MovieDetailView(movie: movie),
-                      ),
-                    ).then((_) {
-                      if (!context.mounted) return;
-                      context.read<HomeViewModel>().init();
-                    });
-                  },
-                  icon: const Icon(Icons.info_outline),
-                  label: Text(
-                    Translations.tr('details'),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRatingPill(String rating) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: SizeTokens.paddingSmall,
+        vertical: SizeTokens.paddingMin,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.58),
+        borderRadius: SizeTokens.circularRadiusSmall,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.star_rounded,
+            color: Colors.amber,
+            size: SizeTokens.iconSmall,
+          ),
+          SizedBox(width: SizeTokens.paddingMin),
+          Text(
+            'IMDb $rating',
+            style: TextStyle(
+              color: AppTheme.textPrimaryColor,
+              fontSize: SizeTokens.textSmall,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildTypePill(String type) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: SizeTokens.paddingSmall,
+        vertical: SizeTokens.paddingMin,
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor.withValues(alpha: 0.82),
+        borderRadius: SizeTokens.circularRadiusSmall,
+      ),
+      child: Text(
+        type.toUpperCase(),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: SizeTokens.textSmall,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.4,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSuggestedPill() {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: SizeTokens.paddingSmall,
+        vertical: SizeTokens.paddingMin,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.62),
+        borderRadius: SizeTokens.circularRadiusSmall,
+        border: Border.all(
+          color: AppTheme.primaryColor.withValues(alpha: 0.45),
+        ),
+      ),
+      child: Text(
+        Translations.tr('suggested'),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: SizeTokens.textSmall,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  void _openDetail(BuildContext context, Movie movie) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => MovieDetailView(movie: movie)),
+    ).then((_) {
+      if (!context.mounted) return;
+      context.read<HomeViewModel>().init();
+    });
   }
 
   Widget _buildIndicator() {
@@ -245,11 +347,13 @@ class _SliderWidgetState extends State<SliderWidget> {
       children: List.generate(
         widget.movies.length,
         (index) => Container(
-          width: _currentPage == index ? 12.0 : 8.0,
-          height: 8.0,
-          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+          width: _currentPage == index
+              ? SizeTokens.paddingMedium
+              : SizeTokens.paddingSmall,
+          height: SizeTokens.paddingMin,
+          margin: EdgeInsets.symmetric(horizontal: SizeTokens.paddingMin / 2),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4.0),
+            borderRadius: BorderRadius.circular(SizeTokens.radiusSmall),
             color: _currentPage == index
                 ? AppTheme.primaryColor
                 : AppTheme.textSecondaryColor,

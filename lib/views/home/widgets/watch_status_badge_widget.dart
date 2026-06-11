@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../models/watch_status.dart';
 import '../../../app/translations.dart';
 import '../../../app/app_theme.dart';
+import '../../../core/responsive/size_tokens.dart';
 
 class WatchStatusBadge extends StatelessWidget {
   final WatchStatus status;
@@ -65,32 +66,35 @@ class WatchStatusBadge extends StatelessWidget {
 
     if (!showLabel) {
       return Container(
-        padding: const EdgeInsets.all(4),
+        padding: EdgeInsets.all(SizeTokens.paddingMin),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.65),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: SizeTokens.circularRadiusSmall,
         ),
-        child: Icon(icon, color: color, size: 14),
+        child: Icon(icon, color: color, size: SizeTokens.textSmall),
       );
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: SizeTokens.paddingSmall,
+        vertical: SizeTokens.paddingMin,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
         border: Border.all(color: color.withValues(alpha: 0.5)),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: SizeTokens.circularRadiusLarge,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 14),
-          const SizedBox(width: 4),
+          Icon(icon, color: color, size: SizeTokens.textSmall),
+          SizedBox(width: SizeTokens.paddingMin),
           Text(
             Translations.tr(labelKeyFor(status)),
             style: TextStyle(
               color: color,
-              fontSize: 11,
+              fontSize: SizeTokens.textSmall,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -117,16 +121,16 @@ class WatchStatusPicker extends StatelessWidget {
       children: [
         Text(
           Translations.tr('watchStatus'),
-          style: const TextStyle(
-            fontSize: 16,
+          style: TextStyle(
+            fontSize: SizeTokens.textMedium,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: SizeTokens.paddingSmall),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: SizeTokens.paddingSmall,
+          runSpacing: SizeTokens.paddingSmall,
           children: WatchStatus.values.map((status) {
             final isSelected = current == status;
             final color = WatchStatusBadge.colorFor(status);
@@ -134,7 +138,10 @@ class WatchStatusPicker extends StatelessWidget {
               onTap: () => onChanged(status),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                padding: EdgeInsets.symmetric(
+                  horizontal: SizeTokens.paddingSmall,
+                  vertical: SizeTokens.paddingMin,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? color.withValues(alpha: 0.2)
@@ -143,7 +150,7 @@ class WatchStatusPicker extends StatelessWidget {
                     color: isSelected ? color : AppTheme.surfaceLightColor,
                     width: isSelected ? 1.5 : 1,
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: SizeTokens.circularRadiusLarge,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -151,15 +158,17 @@ class WatchStatusPicker extends StatelessWidget {
                     Icon(
                       WatchStatusBadge.iconFor(status),
                       color: isSelected ? color : AppTheme.textSecondaryColor,
-                      size: 16,
+                      size: SizeTokens.iconSmall,
                     ),
-                    const SizedBox(width: 6),
+                    SizedBox(width: SizeTokens.paddingMin),
                     Text(
                       Translations.tr(WatchStatusBadge.labelKeyFor(status)),
                       style: TextStyle(
                         color: isSelected ? color : AppTheme.textSecondaryColor,
-                        fontSize: 12,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontSize: SizeTokens.textSmall,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
                   ],

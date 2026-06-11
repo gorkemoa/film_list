@@ -1,12 +1,8 @@
-import 'dart:io';
-import 'package:film_list/services/discovery_service.dart';
-import 'package:film_list/services/grok_ai_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
-
 import 'app/app_theme.dart';
 import 'app/translations.dart';
 import 'core/database/local_db.dart';
@@ -16,13 +12,15 @@ import 'services/omdb_detail_service.dart';
 import 'services/poster_download_service.dart';
 import 'services/review_service.dart';
 import 'services/custom_list_service.dart';
+import 'services/initial_seed_service.dart';
+import 'services/discovery_catalog_service.dart';
 import 'viewmodels/home_view_model.dart';
 import 'viewmodels/add_movie_view_model.dart';
 import 'viewmodels/movie_detail_view_model.dart';
 import 'viewmodels/profile_view_model.dart';
 import 'viewmodels/custom_list_view_model.dart';
-import 'viewmodels/discovery_view_model.dart';
 import 'viewmodels/stats_view_model.dart';
+import 'viewmodels/discovery_view_model.dart';
 import 'services/translation_service.dart';
 import 'views/home/home_view.dart';
 import 'views/widgets/upgrade_wrapper.dart';
@@ -30,13 +28,7 @@ import 'core/utils/logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  final envPath = '${Directory.current.path}/.env';
-  if (await File(envPath).exists()) {
-    await dotenv.load(fileName: envPath);
-  } else {
-    Logger.debug('GrokAiService: .env file not found at $envPath');
-  }
+  await MobileAds.instance.initialize();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -49,6 +41,14 @@ void main() async {
   final movieCacheService = MovieCacheService();
   final omdbSearchService = OmdbSearchService();
   final omdbDetailService = OmdbDetailService();
+  final discoveryCatalogService = DiscoveryCatalogService(
+    omdbDetailService: omdbDetailService,
+  );
+  await InitialSeedService(
+    movieCacheService: movieCacheService,
+    omdbDetailService: omdbDetailService,
+  ).seedIfNeeded();
+
   final posterDownloadService = PosterDownloadService();
   final reviewService = ReviewService();
   final translationService = TranslationService();
@@ -91,11 +91,7 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => DiscoveryViewModel(
-            discoveryService: DiscoveryService(
-              grokAiService: GrokAiService(),
-              omdbDetailService: omdbDetailService,
-              omdbSearchService: omdbSearchService,
-            ),
+            discoveryCatalogService: discoveryCatalogService,
           ),
         ),
         ChangeNotifierProvider(create: (_) => StatsViewModel()),
@@ -112,7 +108,7 @@ class FilmListApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Offline Film List',
+      title: Translations.tr('appName'),
       theme: AppTheme.lightTheme,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

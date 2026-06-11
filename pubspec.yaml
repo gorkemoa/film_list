@@ -43,10 +43,10 @@ dependencies:
   uuid: ^4.5.3
   shared_preferences: ^2.5.4
   http: ^1.6.0
-  flutter_dotenv: ^5.2.1
   translator: ^1.0.4+1
   upgrader: ^11.0.0
   in_app_review: ^2.0.9
+  google_mobile_ads: ^9.0.0
 
 dev_dependencies:
   flutter_test:

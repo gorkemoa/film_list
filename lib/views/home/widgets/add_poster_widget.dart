@@ -16,8 +16,8 @@ class AddPosterWidget extends StatelessWidget {
       onTap: onTap,
       borderRadius: SizeTokens.circularRadiusSmall,
       child: Container(
-        width: SizeConfig.relativeSize(130),
-        height: SizeConfig.relativeSize(200),
+        width: SizeConfig.relativeSize(112),
+        height: SizeConfig.relativeSize(170),
         decoration: BoxDecoration(
           borderRadius: SizeTokens.circularRadiusSmall,
           gradient: LinearGradient(
@@ -36,8 +36,8 @@ class AddPosterWidget extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: AppTheme.primaryColor.withValues(alpha: 0.1),
-              blurRadius: 10,
-              spreadRadius: 2,
+              blurRadius: SizeTokens.radiusSmall,
+              spreadRadius: SizeTokens.paddingMin / 2,
             ),
           ],
         ),
@@ -45,7 +45,7 @@ class AddPosterWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(SizeTokens.paddingSmall),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppTheme.primaryColor.withValues(alpha: 0.1),
@@ -53,10 +53,10 @@ class AddPosterWidget extends StatelessWidget {
               child: Icon(
                 Icons.add_rounded,
                 color: AppTheme.primaryColor,
-                size: SizeTokens.iconLarge,
+                size: SizeTokens.iconMedium,
               ),
             ),
-            SizedBox(height: SizeTokens.paddingMedium),
+            SizedBox(height: SizeTokens.paddingSmall),
             Text(
               label ?? Translations.tr('addTab'),
               style: TextStyle(
